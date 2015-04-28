@@ -10,6 +10,32 @@ a dataset of sequences and an associated set of meaningful operations
 (selection, counting, transformation).
 
 
+Features
+--------
+
+This project is in the early design and implementation stages.  The
+planned features are:
+
+* Selection and counting of sequences
+* Selection and counting of events
+* Sampling events and sequences
+* Temporal statistics
+* Reading/Writing various relational and flat representations
+
+
+Requirements
+------------
+
+* Python 3
+
+
+License
+-------
+
+Esal is free, open source software.  It is released under the MIT
+license.  See the `LICENSE` file for details.
+
+
 Concepts
 --------
 
@@ -33,27 +59,14 @@ specific names as appropriate.  A stream is just another name for
 iterable.
 
 
-License
+Contact
 -------
 
-Esal is free, open source software.  It is released under the MIT
-license.  See the `LICENSE` file for details.
+* [Aubrey Barnard](https://github.com/afbarnard)
 
-
-Features
---------
-
-* Selection and counting of sequences
-* Selection and counting of events
-* Sampling events and sequences
-* Temporal statistics
-* Reading/Writing various relational and flat representations
-
-
-Requirements
-------------
-
-* Python 3
+[Open an issue](https://github.com/afbarnard/esal/issues/new) to report
+a bug or ask a question.  To contribute, use the regular fork and pull
+request work flow.
 
 
 -----
