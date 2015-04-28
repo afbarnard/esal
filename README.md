@@ -9,8 +9,28 @@ not do any modeling itself.  Conceptually, Esal is a representation for
 a dataset of sequences and an associated set of meaningful operations
 (selection, counting, transformation).
 
-An event sequence is an ordered collection of symbols where each symbol
-(event) can be associated with a time, duration, and value.
+
+Concepts
+--------
+
+An event describes something that happens.  It has a symbol indicating
+the type of event, a time stamp indicating the start of the event, a
+duration, a value, and a sequence identifier.  The sequence identifier
+indicates what sequence of events (time line) the event belongs to.  An
+event type normally corresponds to a particular variable or measurement
+of interest, such as rain.  (When did it start raining?  How long did it
+rain?  How much rain fell?)
+
+An event sequence is an ordered collection of events that all have the
+same sequence identifier.  An event sequence normally the describes the
+time line of a particular entity of interest, such as a person.  Events
+can happen at arbitrary times or be sampled with some pattern so
+sequences may be regular, or irregular, or something in between.
+
+To avoid ambiguity, "sequence" will refer solely to an event sequence.
+Data structures will be referred to as iterables or collections or with
+specific names as appropriate.  A stream is just another name for
+iterable.
 
 
 License
@@ -34,3 +54,9 @@ Requirements
 ------------
 
 * Python 3
+
+
+-----
+
+Copyright (c) 2015 Aubrey Barnard.  This is free software.  See LICENSE
+for details.
