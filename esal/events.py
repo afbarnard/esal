@@ -8,12 +8,16 @@ import collections
 
 # Export public API
 __all__ = (
+    'EVENT_FIELD_NAMES',
+    'EVENT_HEADER',
     'Event',
+    'Header',
     )
 
 
 # An event in a sequence
-Event = collections.namedtuple('Event', 'seq, time, dura, ev, val')
+EVENT_FIELD_NAMES = ('seq', 'time', 'dura', 'ev', 'val')
+Event = collections.namedtuple('Event', EVENT_FIELD_NAMES)
 Event.__doc__ = """
 Event(sequence_id, start_time, duration, event, value)
 
@@ -64,6 +68,54 @@ def _event_getitem(self, index):
     else:
         return super(Event, self).__getitem__(index)
 Event.__getitem__ = _event_getitem
+
+
+class Header:
+    """A Header describes a collection of fields, like a tuple or a row
+    in a table, by giving the fields names and indices.  This supports
+    field access by name for objects without such existing support.
+    """
+    # TODO what about a sparse header (non-contiguous indices)?
+
+    def __init__(self, names):
+        """Creates a header using the given iterable of names, in order.
+        """
+        self.idxs_to_names = tuple(names)
+        self.names_to_idxs = {}
+        for index, name in enumerate(self.idxs_to_names):
+            self.names_to_idxs[name] = index
+
+    def __len__(self):
+        """Returns the number of fields."""
+        return len(self.idxs_to_names)
+
+    def __getitem__(self, key):
+        """Returns the index of the given key (name or index)."""
+        if isinstance(key, int):
+            if key < 0 or key >= len(self.idxs_to_names):
+                raise IndexError(key)
+            return key
+        elif isinstance(key, str):
+            return self.names_to_idxs[key]
+        else:
+            raise KeyError(key)
+
+    def name_of(self, index):
+        """Returns the name of the given index."""
+        return self.idxs_to_names[index]
+
+    def index_of(self, name):
+        """Returns the index of the given name."""
+        return self.names_to_idxs[name]
+
+    def value_of(self, values, key):
+        """Returns the value of the field with the given key (name or
+        index).
+        """
+        return values[self.__getitem__(key)]
+
+
+EVENT_HEADER = Header(EVENT_FIELD_NAMES)
 
 
 class _EventSequence(object): # TODO
