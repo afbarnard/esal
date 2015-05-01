@@ -1,0 +1,11 @@
+Story 2: Count distinct events in a stream
+==========================================
+
+
+Count the number of event sequences (e.g. patients) in a stream of
+events.  Count the number of event types.
+
+* Count of distinct/unique values of a given event field
+* What is selected is what is counted
+* No criterion
+* Report is a single number
