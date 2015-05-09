@@ -28,7 +28,7 @@ simple_events = tuple(
         simple_event_tuples))
 
 # Drug and condition events for example medical data
-_drugs = (
+drugs = (
     'd_ace_inhibitor',
     'd_amphotericin_b',
     'd_antibiotic',
@@ -41,7 +41,7 @@ _drugs = (
     'd_typical_antipsychotic',
     'd_warfarin',
 )
-_conds = (
+conds = (
     'c_angioedema',
     'c_aplastic_anemia',
     'c_acute_liver_failure',
@@ -60,7 +60,7 @@ _conds = (
 # interpreted as observed to be true, observed to be false (absent), and
 # unobserved (None).
 #
-# >>> [(random.randrange(10), random.uniform(2004.0, 2010.0), random.randrange(360), random.choice(_drugs + _conds), random.choice((True, True, True, False, None))) for i in range(100)]
+# >>> [(random.randrange(10), random.uniform(2004.0, 2010.0), random.randrange(360), random.choice(drugs + conds), random.choice((True, True, True, False, None))) for i in range(100)]
 med_event_tuples = (
     (5, 2005.3332745463497, 336, 'c_mi', True),
     (7, 2009.4113006002851, 254, 'd_amphotericin_b', True),
