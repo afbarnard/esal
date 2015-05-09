@@ -13,14 +13,14 @@ def project(items, field_indices):
         yield tuple(item[i] for i in field_indices)
 
 def count(items):
-    # TODO use len if available
+    # Return length if already known
+    if hasattr(items, '__len__'):
+        return len(items)
+    # Else count items
     c = 0
     for item in items:
         c += 1
     return c
 
-def count_distinct(items):
-    distinct_items = set()
-    for item in items:
-        distinct_items.add(item)
-    return len(distinct_items)
+def distinct(items):
+    return set(items)

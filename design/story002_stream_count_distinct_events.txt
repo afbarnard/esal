@@ -27,4 +27,4 @@ Design
 
 * func project(events: event stream, fields: iterable of indices): item stream
 
-* func count_distinct(items: iterable of hashable): int
+* func distinct(items: iterable of hashable): set of items
