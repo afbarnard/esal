@@ -1,4 +1,5 @@
-# Operations on event streams.  Event streams are iterables of events.
+# Event streams and their operations.  Event streams are iterables of
+# events.
 #
 # Copyright (c) 2015 Aubrey Barnard.  This is free software.  See
 # LICENSE for details.
@@ -13,8 +14,13 @@ __all__ = (
     )
 
 
+# Private accessor functions
+
 def _seq_id(event):
     return event.seq
+
+
+# Functions on event streams
 
 def collect_event_sequences(events):
     """Collects events into sequences by grouping by sequence ID.
@@ -22,11 +28,10 @@ def collect_event_sequences(events):
     Returns an event sequence stream given an event stream.  The input
     events must already be sorted by sequence ID.
     """
-    for _, group in itools.groupby(events, key=_seq_id):
-        yield tuple(group) # TODO event sequence objects instead of tuples?
-        # tuple() is OK instead of list() as times are about the same:
-        # timeit.timeit('tuple(range(1000))')
-        # timeit.timeit('list(range(1000))')
+    for _, sequence in itools.groupby(events, key=_seq_id):
+        # Keep event sequences as iterables rather than instantiating to
+        # any particular collection
+        yield sequence
 
 def select(events, field, values):
     """Selects events where the value of the indicated field is in the

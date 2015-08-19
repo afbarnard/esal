@@ -17,7 +17,9 @@ class EventStreamOperationsTest(unittest.TestCase):
             data.simple_events[4:5],
             data.simple_events[5:10],
             )
-        actual = tuple(streams.collect_event_sequences(data.simple_events))
+        actual = tuple(
+            tuple(seq) for seq in
+            streams.collect_event_sequences(data.simple_events))
         self.assertEqual(expected, actual)
 
     def test_select_events(self):
