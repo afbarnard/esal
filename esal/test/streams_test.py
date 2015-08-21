@@ -24,6 +24,24 @@ class EventStreamOperationsTest(unittest.TestCase):
             streams.collect_event_sequences(data.simple_events))
         self.assertEqual(expected, actual)
 
+    def test_flatten(self):
+        def range_generator(start, stop):
+            for i in range(start, stop):
+                yield i
+        iterable = [
+            range(5),
+            ([(5,), 6], 7, [8, 9, 10], ((11,), (12,), [[[13]]])),
+            [[(map(lambda x: x + 14, range(3)),), 17],
+             iter((18, 19)),
+             ((((20,),),),),
+             [range_generator(21, 24), [range_generator(24, 30)]]],
+            '30',
+            ]
+        expected = list(range(30))
+        expected.append('30')
+        actual = list(streams.flatten(iterable))
+        self.assertEqual(expected, actual)
+
     def test_map_sequences_as_events_to_values(self):
         """Tests mapping sequences to values."""
         expected = (7, 3, 14)

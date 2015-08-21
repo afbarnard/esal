@@ -10,6 +10,7 @@ import itertools as itools
 # Export public API
 __all__ = (
     'collect_event_sequences',
+    'flatten',
     'map_sequences_as_events',
     'select',
     )
@@ -33,6 +34,33 @@ def collect_event_sequences(events):
         # Keep event sequences as iterables rather than instantiating to
         # any particular collection
         yield sequence
+
+def flatten(iterable):
+    """Flattens nested iterables into a single iterable.
+
+    Flattens all iterables except strings.
+    """
+    # Do the flattening non-recursively with a stack of iterators so as
+    # to be able to yield items
+    stack = [iter(iterable)]
+    # Loop to yield all items discarding nested structure
+    while len(stack) > 0:
+        # Get the next item in the current iterable
+        try:
+            item = next(stack[-1])
+        # The iterator is exhausted, so pop the current iterable off the
+        # stack
+        except StopIteration:
+            del stack[-1]
+        # Process the item
+        else:
+            # "Recur" if the item is a non-string iterable by pushing an
+            # interator for the item onto the stack
+            if hasattr(item, '__iter__') and not isinstance(item, str):
+                stack.append(iter(item))
+            # Return the item
+            else:
+                yield item
 
 def map_sequences_as_events(function, events):
     """Maps the given function over event sequences given an event
