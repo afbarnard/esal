@@ -13,7 +13,7 @@ from .. import streams
 
 class EventStreamOperationsTest(unittest.TestCase):
 
-    def test_collect_event_sequences(self):
+    def test_collect_sequences(self):
         expected = (
             data.simple_events[0:4],
             data.simple_events[4:5],
@@ -21,7 +21,7 @@ class EventStreamOperationsTest(unittest.TestCase):
             )
         actual = tuple(
             tuple(seq) for seq in
-            streams.collect_event_sequences(data.simple_events))
+            streams.collect_sequences(data.simple_events))
         self.assertEqual(expected, actual)
 
     def test_flatten(self):

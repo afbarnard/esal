@@ -9,7 +9,7 @@ import itertools as itools
 
 # Export public API
 __all__ = (
-    'collect_event_sequences',
+    'collect_sequences',
     'flatten',
     'map_sequences_as_events',
     'select',
@@ -24,7 +24,7 @@ def _seq_id(event):
 
 # Functions on event streams
 
-def collect_event_sequences(events):
+def collect_sequences(events):
     """Collects events into sequences by grouping by sequence ID.
 
     Returns an event sequence stream given an event stream.  The input
