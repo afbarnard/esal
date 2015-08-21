@@ -3,6 +3,8 @@
 # Copyright (c) 2015 Aubrey Barnard.  This is free software.  See
 # LICENSE for details.
 
+import itertools as itools
+
 from .. import events
 
 
@@ -22,10 +24,33 @@ simple_event_tuples = (
     (2, 6, 'b'),
     )
 
+simple_concurrent_event_tuples = (
+    (0, 4, 'c'),
+    (0, 5, 'a'),
+    (0, 5, 'b'),
+    (1, 6, 'd'),
+    (1, 6, 'e'),
+    (2, 0, 'a'),
+    (2, 0, 'c'),
+    (2, 1, 'b'),
+    (2, 1, 'd'),
+    (2, 2, 'd'),
+    (2, 2, 'e'),
+    (2, 4, 'a'),
+    (2, 6, 'a'),
+    (2, 6, 'e'),
+    )
+
 # Event tuples for simple events
 simple_events = tuple(
     map(lambda tup: events.Event(seq=tup[0], time=tup[1], ev=tup[2]),
         simple_event_tuples))
+
+# Event tuples for concurrent events
+simple_concurrent_events = sorted(
+    map(lambda tup: events.Event(seq=tup[0], time=tup[1], ev=tup[2]),
+        itools.chain(simple_event_tuples,
+                     simple_concurrent_event_tuples)))
 
 # Drug and condition events for example medical data
 drugs = (
