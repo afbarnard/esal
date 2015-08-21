@@ -1,4 +1,4 @@
-# Tests for event sequences
+# Tests event sequences
 #
 # Copyright (c) 2015 Aubrey Barnard.  This is free software.  See
 # LICENSE for details.

@@ -28,33 +28,31 @@ class StoryTests(unittest.TestCase):
         self.assertEqual(len(data.med_events),
                          engine.count(data.med_events))
         # Count selected warfarin events
-        self.assertEqual(2,
-                         engine.count(engine.select(
-                             data.med_events, _has_warfarin)))
+        actual = engine.count(
+            engine.select(data.med_events, _has_warfarin))
+        self.assertEqual(2, actual)
 
     def test_story002(self):
         # Count distinct patients (sequence ID is field 0)
-        self.assertEqual(10,
-                         engine.count(engine.distinct(
-                             engine.project(data.med_events, (0,)))))
+        actual = engine.count(
+            engine.distinct(engine.project(data.med_events, (0,))))
+        self.assertEqual(10, actual)
         # Count distinct event types (event type is field 3)
-        self.assertEqual(len(data.drugs) + len(data.conds),
-                         engine.count(engine.distinct(
-                             engine.project(data.med_events, (3,)))))
+        actual = engine.count(
+            engine.distinct(engine.project(data.med_events, (3,))))
+        self.assertEqual(len(data.drugs) + len(data.conds), actual)
 
     def test_story003(self):
         # Count distinct patients that have had warfarin
-        self.assertEqual(2,
-                         engine.count(engine.distinct(engine.project(
-                             engine.select(
-                                 data.med_events, _has_warfarin),
-                             (0,)))))
+        actual = engine.count(engine.distinct(engine.project(
+                    engine.select(data.med_events, _has_warfarin),
+                    (0,))))
+        self.assertEqual(2, actual)
         # Count distinct types of unobserved events
-        self.assertEqual(13,
-                         engine.count(engine.distinct(engine.project(
-                             engine.select(
-                                 data.med_events, _is_unobserved),
-                             (3,)))))
+        actual = engine.count(engine.distinct(engine.project(
+                    engine.select(data.med_events, _is_unobserved),
+                    (3,))))
+        self.assertEqual(13, actual)
 
     def test_story004(self):
         # Order events in reverse by their name and then strip times to
