@@ -56,13 +56,11 @@ class StoryTests(unittest.TestCase):
 
     def test_story004(self):
         # Order events in reverse by their name and then strip times to
-        # convert to sequences
-        def reverse_events_to_sequences(seq):
-            return sequences.timeline_to_sequence(
-                sequences.order_concurrent_events(
-                    seq,
-                    ordering=lambda evs: sorted(
-                        evs, key=lambda e: e.ev, reverse=True)))
+        # convert to sequences.  Number events starting at 1.
+        rev_evs_to_seqs = sequences.make_timeline_to_sequence_flattener(
+            ordering=lambda evs: sorted(
+                evs, key=lambda e: e.ev, reverse=True),
+            start=1)
         ev_idxs = (
             (1, 0, 3, 2, 6, 5, 4), # Seq 0
             (9, 8, 7), # Seq 1
@@ -70,11 +68,10 @@ class StoryTests(unittest.TestCase):
             )
         expected = []
         for seq in ev_idxs:
-            for idx, ev_idx in enumerate(seq):
+            for idx, ev_idx in enumerate(seq, 1):
                 ev = data.simple_concurrent_events[ev_idx]
                 expected.append(events.Event(
                         ev.seq, idx, ev.dura, ev.ev, ev.val))
         actual = list(streams.map_sequences_as_events(
-                reverse_events_to_sequences,
-                data.simple_concurrent_events))
+                rev_evs_to_seqs, data.simple_concurrent_events))
         self.assertEqual(expected, actual)
