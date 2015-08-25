@@ -2,12 +2,12 @@ Event Sequence Analysis Library
 ===============================
 
 
-Esal ("easel") is a library for the statistical analysis and
-manipulation of event sequences.  Esal is intended to be used for
-exploring event sequence data and preparing data for modeling, but does
-not do any modeling itself.  Conceptually, Esal is a representation for
-a dataset of sequences and an associated set of meaningful operations
-(selection, counting, transformation).
+Esal ("easel") is a library for the descriptive statistical analysis and
+manipulation of event sequences and timelines.  Esal is intended to be
+used for exploring event sequence data and preparing data for modeling,
+but does not do any modeling itself.  Conceptually, Esal is a
+representation for a dataset of sequences/timelines and an associated
+set of meaningful operations (selection, counting, transformation).
 
 
 Features
@@ -42,16 +42,23 @@ Concepts
 An event describes something that happens.  It has a symbol indicating
 the type of event, a time stamp indicating the start of the event, a
 duration, a value, and a sequence identifier.  The sequence identifier
-indicates what sequence of events (time line) the event belongs to.  An
-event type normally corresponds to a particular variable or measurement
-of interest, such as rain.  (When did it start raining?  How long did it
-rain?  How much rain fell?)
+indicates what sequence of events (or timeline) the event belongs to.
+An event type normally corresponds to a particular variable or
+measurement of interest, such as rain.  (When did it start raining?  How
+long did it rain?  How much rain fell?)
 
 An event sequence is an ordered collection of events that all have the
-same sequence identifier.  An event sequence normally the describes the
-time line of a particular entity of interest, such as a person.  Events
+same sequence identifier.  An event sequence normally describes the
+timeline of a particular entity of interest, such as a person.  Events
 can happen at arbitrary times or be sampled with some pattern so
 sequences may be regular, or irregular, or something in between.
+
+A timeline is a type of event sequence where all of the events have
+"interpretable" times, that is, times that are analogous to the real
+numbers.  Integer times are fine as long as their differences are
+meaningful.  Thus a timeline is distinguished from sequences that have
+non-meaningful times, such as time steps or other sequential numbering,
+sequences that have only ordering and not difference.
 
 To avoid ambiguity, "sequence" will refer solely to an event sequence.
 Data structures will be referred to as iterables or collections or with
