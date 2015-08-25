@@ -55,8 +55,8 @@ def order_concurrent_events(sequence, ordering=data_order):
         for event in ordering(concurrent_events):
             yield event
 
-def timelines_to_sequences(sequence, start=0):
-    """Converts timelines to sequences by replacing event times with
+def timeline_to_sequence(sequence, start=0):
+    """Converts a timeline to a sequence by replacing event times with
     event indices.
 
     * sequence: iterable of events

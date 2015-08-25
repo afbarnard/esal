@@ -58,7 +58,7 @@ class StoryTests(unittest.TestCase):
         # Order events in reverse by their name and then strip times to
         # convert to sequences
         def reverse_events_to_sequences(seq):
-            return sequences.timelines_to_sequences(
+            return sequences.timeline_to_sequence(
                 sequences.order_concurrent_events(
                     seq,
                     ordering=lambda evs: sorted(

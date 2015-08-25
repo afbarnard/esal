@@ -30,11 +30,11 @@ class SequenceTests(unittest.TestCase):
                 data.simple_concurrent_events[10:], ordering=reverse))
         self.assertEqual(expected, actual)
 
-    def test_timelines_to_sequences(self):
+    def test_timeline_to_sequence(self):
         expected = data.simple_concurrent_events[10:]
         for idx, ev in enumerate(expected):
             expected[idx] = events.Event(
                 ev.seq, idx, ev.dura, ev.ev, ev.val)
-        actual = list(sequences.timelines_to_sequences(
+        actual = list(sequences.timeline_to_sequence(
                 data.simple_concurrent_events[10:]))
         self.assertEqual(expected, actual)
