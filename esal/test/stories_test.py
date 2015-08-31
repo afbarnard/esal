@@ -69,9 +69,9 @@ class StoryTests(unittest.TestCase):
         expected = []
         for seq in ev_idxs:
             for idx, ev_idx in enumerate(seq, 1):
-                ev = data.simple_concurrent_events[ev_idx]
+                ev = data.binary_events[ev_idx]
                 expected.append(events.Event(
                         ev.seq, idx, ev.dura, ev.ev, ev.val))
         actual = list(streams.map_sequences_as_events(
-                rev_evs_to_seqs, data.simple_concurrent_events))
+                rev_evs_to_seqs, data.binary_events))
         self.assertEqual(expected, actual)
