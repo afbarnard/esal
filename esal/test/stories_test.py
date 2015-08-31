@@ -3,6 +3,7 @@
 # Copyright (c) 2015 Aubrey Barnard.  This is free software.  See
 # LICENSE for details.
 
+import itertools as itools
 import unittest
 
 from . import data
@@ -61,17 +62,22 @@ class StoryTests(unittest.TestCase):
             ordering=lambda evs: sorted(
                 evs, key=lambda e: e.ev, reverse=True),
             start=1)
-        ev_idxs = (
-            (1, 0, 3, 2, 6, 5, 4), # Seq 0
-            (9, 8, 7), # Seq 1
-            (12, 11, 10, 15, 14, 13, 18, 17, 16, 20, 19, 23, 22, 21), # Seq 2
+        seqs = (
+            data.seq_concurrent_events,
+            data.seq_sorted,
+            data.seq_rand1_08,
+            )
+        index_maps = (
+            (2, 1, 0, 6, 5, 4, 3, 8, 7, 13, 12, 11, 10, 9),
+            (1, 2, 0, 3, 4, 6, 5, 9, 8, 7, 10),
+            (1, 0, 4, 3, 2, 5, 6, 7),
             )
         expected = []
-        for seq in ev_idxs:
-            for idx, ev_idx in enumerate(seq, 1):
-                ev = data.binary_events[ev_idx]
+        for seq_idx, seq in enumerate(seqs):
+            for ev_num, ev_idx in enumerate(index_maps[seq_idx], 1):
+                ev = seq[ev_idx]
                 expected.append(events.Event(
-                        ev.seq, idx, ev.dura, ev.ev, ev.val))
+                        ev.seq, ev_num, ev.dura, ev.ev, ev.val))
         actual = list(streams.map_sequences_as_events(
-                rev_evs_to_seqs, data.binary_events))
+                rev_evs_to_seqs, itools.chain.from_iterable(seqs)))
         self.assertEqual(expected, actual)

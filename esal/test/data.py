@@ -8,42 +8,146 @@ import itertools as itools
 from .. import events
 
 
-# Raw tuples for binary events in sorted order
-#
-# >>> sorted((random.randrange(3), random.randrange(10), random.choice('abcde')) for i in range(10))
+# Raw tuples for binary events in "data order"
 binary_event_tuples = (
-    (0, 1, 'a'), # 0
-    (0, 1, 'b'),
-    (0, 4, 'c'),
-    (0, 4, 'd'),
-    (0, 5, 'a'),
-    (0, 5, 'b'), # 5
-    (0, 5, 'c'),
+    # Sequence 0 length 0
 
-    (1, 6, 'a'), # 7
-    (1, 6, 'd'),
-    (1, 6, 'e'),
+    # Single event
+    (1, 0, 'a'),
 
-    (2, 0, 'a'), # 10
-    (2, 0, 'c'),
-    (2, 0, 'e'),
-    (2, 1, 'a'),
-    (2, 1, 'b'),
-    (2, 1, 'd'), # 15
-    (2, 2, 'b'),
-    (2, 2, 'd'),
-    (2, 2, 'e'),
-    (2, 4, 'a'),
-    (2, 4, 'd'), # 20
-    (2, 6, 'a'),
-    (2, 6, 'b'),
-    (2, 6, 'e'),
-    ) # 24
+    # Same event, same time
+    (2, 0, 'a'), # 1
+    (2, 0, 'a'),
+
+    # Same event, different times
+    (3, 0, 'a'), # 3
+    (3, 1, 'a'),
+
+    # Different events, same time
+    (4, 0, 'a'), # 5
+    (4, 0, 'b'),
+
+    # Different events, different times
+    (5, 0, 'a'), # 7
+    (5, 1, 'b'),
+
+    # Full unique sequence
+    (6, 0, 'a'), # 9
+    (6, 1, 'b'),
+    (6, 2, 'c'),
+    (6, 3, 'd'),
+    (6, 4, 'e'),
+    (6, 5, 'f'),
+
+    # Multiple events every time
+    (7, 0, 'a'), # 15
+    (7, 0, 'b'),
+    (7, 0, 'c'),
+    (7, 1, 'a'),
+    (7, 1, 'b'),
+    (7, 1, 'c'),
+    (7, 1, 'd'),
+    (7, 2, 'a'),
+    (7, 2, 'b'),
+    (7, 3, 'a'),
+    (7, 3, 'b'),
+    (7, 3, 'c'),
+    (7, 3, 'd'),
+    (7, 3, 'e'),
+
+    # Unsorted
+    (8, 0, 'a'), # 29
+    (8, 4, 'd'),
+    (8, 4, 'a'),
+    (8, 3, 'e'),
+    (8, 0, 'b'),
+    (8, 9, 'f'),
+    (8, 0, 'b'),
+    (8, 1, 'a'),
+    (8, 4, 'e'),
+    (8, 2, 'f'),
+    (8, 3, 'e'),
+
+    # Sorted version of above
+    (9, 0, 'a'), # 40
+    (9, 0, 'b'),
+    (9, 0, 'b'),
+    (9, 1, 'a'),
+    (9, 2, 'f'),
+    (9, 3, 'e'),
+    (9, 3, 'e'),
+    (9, 4, 'a'),
+    (9, 4, 'd'),
+    (9, 4, 'e'),
+    (9, 9, 'f'),
+
+    # Random 1, length 8
+    # {1:(e,f), 4:(d,f,f), 5:(b,a), 9:f}
+    (6741, 1, 'e'), # 51
+    (6741, 1, 'f'),
+    (6741, 4, 'd'),
+    (6741, 4, 'f'),
+    (6741, 4, 'f'),
+    (6741, 5, 'b'),
+    (6741, 5, 'a'),
+    (6741, 9, 'f'),
+
+    # Random 2, length 15
+    # {0:c, 1:d, 2:c, 4:f, 5:(c,b,d,c), 6:(a,e), 8:(c,b,a), 9:(b,a)}
+    (4594, 0, 'c'), # 59
+    (4594, 1, 'd'),
+    (4594, 2, 'c'),
+    (4594, 4, 'f'),
+    (4594, 5, 'c'),
+    (4594, 5, 'b'),
+    (4594, 5, 'd'),
+    (4594, 5, 'c'),
+    (4594, 6, 'a'),
+    (4594, 6, 'e'),
+    (4594, 8, 'c'),
+    (4594, 8, 'b'),
+    (4594, 8, 'a'),
+    (4594, 9, 'b'),
+    (4594, 9, 'a'),
+
+    # Random, unsorted events for selection, length 20
+    # >>> (random.randrange(10), random.randrange(10), random.choice('abcdef'))
+    (5, 0, 'b'), # 74
+    (1, 3, 'a'),
+    (4, 3, 'a'),
+    (5, 1, 'd'),
+    (6, 7, 'e'),
+    (6, 1, 'f'),
+    (5, 4, 'a'),
+    (0, 1, 'a'),
+    (0, 8, 'e'),
+    (1, 0, 'a'),
+    (7, 6, 'b'),
+    (1, 0, 'e'),
+    (6, 3, 'e'),
+    (1, 8, 'd'),
+    (3, 3, 'f'),
+    (3, 3, 'e'),
+    (1, 3, 'c'),
+    (6, 8, 'e'),
+    (4, 1, 'e'),
+    (9, 7, 'd'),
+) # 94
 
 # Event tuples for binary events
 binary_events = tuple(
     map(lambda tup: events.Event(seq=tup[0], time=tup[1], ev=tup[2]),
         binary_event_tuples))
+
+# Specific event sequences to be used in preference to indexing events
+seq_len1 = binary_events[0:1]
+seq_abcdef = binary_events[9:15]
+seq_concurrent_events = binary_events[15:29]
+seq_unsorted = binary_events[29:40]
+seq_sorted = binary_events[40:51]
+seq_rand1_08 = binary_events[51:59]
+seq_rand2_15 = binary_events[59:74]
+evs_for_selection = binary_events[74:94]
 
 # Drug and condition events for example medical data
 drugs = (

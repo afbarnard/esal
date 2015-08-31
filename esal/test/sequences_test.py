@@ -20,21 +20,21 @@ class SequenceTests(unittest.TestCase):
             return reversed(list(iterable))
 
         # Use sequence 2 because it has the most events
-        expected = list(itools.chain(
-                reversed(data.binary_events[10:13]),
-                reversed(data.binary_events[13:16]),
-                reversed(data.binary_events[16:19]),
-                reversed(data.binary_events[19:21]),
-                reversed(data.binary_events[21:24])))
+        expected = list(data.seq_concurrent_events[i] for i in (
+                2, 1, 0, # Time 0
+                6, 5, 4, 3, # Time 1
+                8, 7, # Time 2
+                13, 12, 11, 10, 9, # Time 3
+                ))
         actual = list(sequences.order_concurrent_events(
-                data.binary_events[10:], ordering=reverse))
+                data.seq_concurrent_events, ordering=reverse))
         self.assertEqual(expected, actual)
 
     def test_timeline_to_sequence(self):
-        expected = list(data.binary_events[10:])
+        expected = list(data.seq_rand2_15)
         for idx, ev in enumerate(expected):
             expected[idx] = events.Event(
                 ev.seq, idx, ev.dura, ev.ev, ev.val)
         actual = list(sequences.timeline_to_sequence(
-                data.binary_events[10:]))
+                data.seq_rand2_15))
         self.assertEqual(expected, actual)
