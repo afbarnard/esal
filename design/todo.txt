@@ -12,7 +12,6 @@ command from the top of the source tree.
     grep -iR TODO esal/*
 
 
-* get items from an iterable by index
 * split sequence into all subsequences of length n
 * sequence to bitmap by key
 * sequence to feature vector given feature functions
