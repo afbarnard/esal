@@ -13,7 +13,6 @@ command from the top of the source tree.
 
 
 * get items from an iterable by index
-* firsts
 * split sequence into all subsequences of length n
 * sequence to bitmap by key
 * sequence to feature vector given feature functions
