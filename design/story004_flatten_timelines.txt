@@ -36,3 +36,7 @@ and sorted by time.
   function that takes an iterable of concurrent events and returns an
   iterable of events.  These events then become part of the flattened
   sequence, in order.
+
+-----
+Copyright (c) 2015 Aubrey Barnard.  This is free software.  See LICENSE
+for details.

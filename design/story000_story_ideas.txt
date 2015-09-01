@@ -17,3 +17,7 @@ Story 0: List of story ideas
 * What is the average sequence length in patients over 65?
 * What is the average number of heart attacks (MIs) (incidence)?
 * What is the average number of MIs in patients who have had one?
+
+-----
+Copyright (c) 2015 Aubrey Barnard.  This is free software.  See LICENSE
+for details.
