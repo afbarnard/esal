@@ -1,0 +1,21 @@
+TO DO
+=====
+
+
+This is an internal list of things to do and features to implement.  It
+is less formal and at a lower level than the list of story ideas.  It is
+less urgent than any issues (which are external).
+
+The code may contain specific TODOs which be found by running this
+command from the top of the source tree.
+
+    grep -iR TODO esal/*
+
+
+* get items from an iterable by index
+* firsts
+* split sequence into all subsequences of length n
+* sequence to bitmap by key
+* sequence to feature vector given feature functions
+* apply function to windows of a sequence
+* function to get index, value of nonzero items (sparsify)
