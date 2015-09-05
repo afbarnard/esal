@@ -84,3 +84,47 @@ class GetItemsTest(unittest.TestCase):
         actual = tuple(general.getitems(
                 iter(self.items), iter(self.indices1)))
         self.assertEqual(expected, actual)
+
+
+class WindowsTest(unittest.TestCase):
+
+    items = (8, 6, 3, 8, 9, 4, 7, 3, 8, 2, 7)
+
+    def test_empty_items(self):
+        expected = ()
+        actual = tuple(general.windows(iter(()), 5))
+        self.assertEqual(expected, actual)
+
+    def test_empty_window(self):
+        expected = ()
+        actual = tuple(general.windows(iter(self.items), 0))
+        self.assertEqual(expected, actual)
+
+    def test_single_items(self):
+        expected = ((8,), (6,), (3,), (8,), (9,), (4,))
+        actual = tuple(general.windows(iter(self.items[:6]), 1))
+        self.assertEqual(expected, actual)
+
+    def test_window_equals_length(self):
+        expected = (self.items,)
+        actual = tuple(general.windows(
+            iter(self.items), len(self.items)))
+        self.assertEqual(expected, actual)
+
+    def test_window_smaller_than_length(self):
+        expected = (
+            self.items[0:5],
+            self.items[1:6],
+            self.items[2:7],
+            self.items[3:8],
+            self.items[4:9],
+            self.items[5:10],
+            )
+        actual = tuple(general.windows(iter(self.items[:10]), 5))
+        self.assertEqual(expected, actual)
+
+    def test_window_larger_than_length(self):
+        expected = (self.items,)
+        actual = tuple(general.windows(
+            iter(self.items), len(self.items) + 1))
+        self.assertEqual(expected, actual)

@@ -77,3 +77,30 @@ def getitems(items, indices):
         return _getitems_indexable(items, indices)
     else:
         return _getitems_iterable(items, indices)
+
+def windows(items, window_size):
+    """Generates all the contiguous subsequences (windows) of the given size
+    in item iteration order.
+
+    * items: Iterable of items.  Instantiated as a tuple if not already
+      indexable.
+    * window_size: Size of the windows to generate.
+    """
+    # If the window size is zero, there are no windows
+    if window_size <= 0:
+        return
+    # Instantiate iterable if necessary
+    if (not hasattr(items, '__getitem__')
+            or not hasattr(items, '__len__')):
+        items = tuple(items)
+    # If the number of items is zero, there are no windows
+    if not items:
+        return
+    # If the window size is the same or larger than the number of items,
+    # there is only one window
+    if window_size >= len(items):
+        yield items
+        return
+    # Generate each window
+    for start in range(len(items) - window_size + 1):
+        yield items[start:start + window_size]

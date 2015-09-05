@@ -12,10 +12,9 @@ command from the top of the source tree.
     grep -iR TODO esal/*
 
 
-* split sequence into all subsequences of length n
+* add option to flatten to control depth
 * sequence to bitmap by key
 * sequence to feature vector given feature functions
-* apply function to windows of a sequence
 * function to get index, value of nonzero items (sparsify)
 
 -----
