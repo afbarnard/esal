@@ -18,6 +18,7 @@ Story 0: List of story ideas
 * What is the average number of heart attacks (MIs) (incidence)?
 * What is the average number of MIs in patients who have had one?
 
+
 -----
 Copyright (c) 2015 Aubrey Barnard.  This is free software.  See LICENSE
 for details.

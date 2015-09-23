@@ -37,6 +37,7 @@ and sorted by time.
   iterable of events.  These events then become part of the flattened
   sequence, in order.
 
+
 -----
 Copyright (c) 2015 Aubrey Barnard.  This is free software.  See LICENSE
 for details.

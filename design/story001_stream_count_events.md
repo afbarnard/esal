@@ -41,6 +41,7 @@ Design
 
 * func count(events: event stream): int
 
+
 -----
 Copyright (c) 2015 Aubrey Barnard.  This is free software.  See LICENSE
 for details.

@@ -17,6 +17,7 @@ command from the top of the source tree.
 * sequence to feature vector given feature functions
 * function to get index, value of nonzero items (sparsify)
 
+
 -----
 Copyright (c) 2015 Aubrey Barnard.  This is free software.  See LICENSE
 for details.

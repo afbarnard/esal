@@ -29,6 +29,7 @@ Design
 
 * func distinct(items: iterable of hashable): set of items
 
+
 -----
 Copyright (c) 2015 Aubrey Barnard.  This is free software.  See LICENSE
 for details.
