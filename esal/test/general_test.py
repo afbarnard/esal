@@ -3,6 +3,7 @@
 # Copyright (c) 2015 Aubrey Barnard.  This is free software.  See
 # LICENSE for details.
 
+import datetime
 import unittest
 
 from .. import general
@@ -128,3 +129,98 @@ class WindowsTest(unittest.TestCase):
         actual = tuple(general.windows(
             iter(self.items), len(self.items) + 1))
         self.assertEqual(expected, actual)
+
+
+class FullyQualifiedTypeNameTest(unittest.TestCase):
+
+    names_objects = (
+        ('builtins.NoneType', None),
+        ('builtins.bool', False),
+        ('builtins.int', 0),
+        ('builtins.float', 0.0),
+        ('builtins.str', ''),
+        ('builtins.tuple', ()),
+        ('builtins.list', []),
+        ('builtins.dict', {}),
+        )
+
+    def test_builtin_objects(self):
+        for name, obj in self.names_objects:
+            self.assertEqual(name, general.fq_typename(obj))
+
+    def test_builtin_types(self):
+        for name, obj in self.names_objects:
+            self.assertEqual(name, general.fq_typename(type(obj)))
+
+    def test_nested_modules(self):
+        self.assertEqual(
+            'esal.test.general_test.FullyQualifiedTypeNameTest',
+            general.fq_typename(self))
+
+
+class UniversalSortKeyTest(unittest.TestCase):
+
+    objects = (False, 0, 0.0, '', (), [], {})
+
+    def test_none(self):
+        self.assertEqual((), general.universal_sort_key(None))
+
+    def test_builtin_objects(self):
+        for obj in self.objects:
+            expected = (general.fq_typename(obj), obj)
+            actual = general.universal_sort_key(obj)
+            self.assertEqual(expected, actual)
+
+    def test_builtin_objects_keyfunc(self):
+        for obj in self.objects:
+            expected = (general.fq_typename(obj), str(obj))
+            actual = general.universal_sort_key(obj, key=str)
+            self.assertEqual(expected, actual)
+
+
+class IterableSortKeyTest(unittest.TestCase):
+
+    # Include types None < int < float < str < datetime.date
+    tuples = (
+        (None, None),
+        (None, 735865),
+        (None, 735866),
+        (None, 735865.0),
+        (None, 735866.0),
+        (None, '735865'),
+        (None, '735866'),
+        (None, datetime.date(2015, 9, 24)),
+        (None, datetime.date(2015, 9, 25)),
+        (461, None),
+        (461, 735865),
+        (461, 735866),
+        (461, 735865.0),
+        (461, 735866.0),
+        (461, '735865'),
+        (461, '735866'),
+        (461, datetime.date(2015, 9, 24)),
+        (461, datetime.date(2015, 9, 25)),
+        (461.0, None),
+        (461.0, 735865),
+        (461.0, 735866),
+        (461.0, 735865.0),
+        (461.0, 735866.0),
+        (461.0, '735865'),
+        (461.0, '735866'),
+        (461.0, datetime.date(2015, 9, 24)),
+        (461.0, datetime.date(2015, 9, 25)),
+        ('461', None),
+        ('461', 735865),
+        ('461', 735866),
+        ('461', 735865.0),
+        ('461', 735866.0),
+        ('461', '735865'),
+        ('461', '735866'),
+        ('461', datetime.date(2015, 9, 24)),
+        ('461', datetime.date(2015, 9, 25)),
+        )
+
+    def test_iterable_sort_key(self):
+        srtd = sorted(reversed(self.tuples),
+                      key=general.iterable_sort_key)
+        self.assertSequenceEqual(self.tuples, srtd)

@@ -104,3 +104,39 @@ def windows(items, window_size):
     # Generate each window
     for start in range(len(items) - window_size + 1):
         yield items[start:start + window_size]
+
+def fq_typename(obj):
+    """Returns the fully-qualified type name of an object.
+
+    If the object is a type, returns its fully-qualified name.
+    """
+    typ = type(obj) if not isinstance(obj, type) else obj
+    return '{}.{}'.format(typ.__module__, typ.__qualname__)
+
+def universal_sort_key(obj, key=None):
+    """Returns a universal sort key for an object.
+
+    A universal sort key allows an object to be sorted with other
+    objects of heterogeneous types without type errors.
+
+    The key for None is (), which sorts before any other universal sort
+    key.
+
+    * key: Function to make a sort key from 'obj'.
+    """
+    if obj is None:
+        return ()
+    else:
+        qualname = fq_typename(obj)
+        if key is None:
+            return (qualname, obj)
+        else:
+            return (qualname, key(obj))
+
+def iterable_sort_key(iterable, key=universal_sort_key):
+    """Returns a tuple of sort keys, one key for each item in the given
+    iterable.
+
+    * key: Function to make a sort key from an item.
+    """
+    return tuple(key(item) for item in iterable)
