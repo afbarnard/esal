@@ -6,21 +6,27 @@
 import unittest
 
 from .. import events
+from .. import general
 
 
 class EventTest(unittest.TestCase):
 
     event_fields = ('pt12345', '2015-04-28', 31, 'mi', True)
 
+    def setUp(self):
+        self.event = events.Event(*self.event_fields)
+
     def test_getitem_by_index(self):
-        event = events.Event(*self.event_fields)
         for index, value in enumerate(self.event_fields):
-            self.assertEqual(value, event[index])
+            self.assertEqual(value, self.event[index])
 
     def test_getitem_by_name(self):
-        event = events.Event(*self.event_fields)
-        for index, name in enumerate(event._fields):
-            self.assertEqual(self.event_fields[index], event[name])
+        for index, name in enumerate(self.event._fields):
+            self.assertEqual(self.event_fields[index], self.event[name])
+
+    def test_sort_key(self):
+        key = general.iterable_sort_key(self.event_fields)
+        self.assertEqual(key, self.event.sort_key())
 
 
 class HeaderTest(unittest.TestCase):

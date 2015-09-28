@@ -5,6 +5,8 @@
 
 import collections
 
+from . import general
+
 
 # Export public API
 __all__ = (
@@ -68,6 +70,10 @@ def _event_getitem(self, index):
     else:
         return super(Event, self).__getitem__(index)
 Event.__getitem__ = _event_getitem
+
+def _event_sort_key(self):
+    return general.iterable_sort_key(self)
+Event.sort_key = _event_sort_key
 
 
 class Header:

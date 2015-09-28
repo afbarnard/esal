@@ -16,6 +16,7 @@ command from the top of the source tree.
 * sequence to bitmap by key
 * sequence to feature vector given feature functions
 * function to get index, value of nonzero items (sparsify)
+* convert Event into a class instead of a named tuple
 
 
 -----
