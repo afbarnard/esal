@@ -45,10 +45,10 @@ class EventTest(unittest.TestCase):
         self.event = events.Event(*self.event_fields)
 
     def test_construction_by_name_value_pairs(self):
-        self.event = events.Event(time=3.3, ev='c', seq=111)
+        self.event = events.Event(time=3.3, typ='c', seq=111)
         self.assertEqual(111, self.event.seq)
         self.assertEqual(3.3, self.event.time)
-        self.assertEqual('c', self.event.ev)
+        self.assertEqual('c', self.event.typ)
         self.assertIsNone(self.event.dura)
         self.assertIsNone(self.event.val)
 
@@ -95,7 +95,7 @@ class EventTest(unittest.TestCase):
         self.assertEqual(hash(self.event), hash(event2))
 
     def test_repr(self):
-        rep = "Event(seq='pt12345', time='2015-04-28', dura=31, ev='mi', val=True)"
+        rep = "Event(seq='pt12345', time='2015-04-28', dura=31, typ='mi', val=True)"
         self.assertEqual(rep, repr(self.event))
 
     def test_sort_key(self):
@@ -103,11 +103,11 @@ class EventTest(unittest.TestCase):
         self.assertEqual(key, self.event.sort_key())
 
     def test_matches(self):
-        self.assertTrue(self.event.matches(ev='mi'))
+        self.assertTrue(self.event.matches(typ='mi'))
         self.assertTrue(self.event.matches(dura=31, val=True))
         self.assertTrue(self.event.matches(*self.event_fields))
         self.assertFalse(self.event.matches(seq=3))
-        self.assertFalse(self.event.matches(ev='a'))
+        self.assertFalse(self.event.matches(typ='a'))
         self.assertFalse(self.event.matches(val='ok'))
 
     def test_matches_any(self):
@@ -120,6 +120,6 @@ class EventTest(unittest.TestCase):
 
     def test_matches_predicates(self):
         self.assertTrue(self.event.matches(
-            ev=lambda e: e in ('chf', 'ht', 'mi', 'flu'),
+            typ=lambda e: e in ('chf', 'ht', 'mi', 'flu'),
             val=lambda v: v in (None, True, 1),
             time=lambda t: '2015' in t))

@@ -16,7 +16,7 @@ from .. import streams
 # Selection predicates
 
 def _has_warfarin(event):
-    return event.ev == 'd_warfarin'
+    return event.typ == 'd_warfarin'
 
 def _is_unobserved(event):
     return event.val is None
@@ -60,7 +60,7 @@ class StoryTests(unittest.TestCase):
         # convert to sequences.  Number events starting at 1.
         rev_evs_to_seqs = sequences.make_timeline_to_sequence_flattener(
             ordering=lambda evs: sorted(
-                evs, key=lambda e: e.ev, reverse=True),
+                evs, key=lambda e: e.typ, reverse=True),
             start=1)
         seqs = (
             data.seq_concurrent_events,
@@ -77,7 +77,7 @@ class StoryTests(unittest.TestCase):
             for ev_num, ev_idx in enumerate(index_maps[seq_idx], 1):
                 ev = seq[ev_idx]
                 expected.append(events.Event(
-                        ev.seq, ev_num, ev.dura, ev.ev, ev.val))
+                        ev.seq, ev_num, ev.dura, ev.typ, ev.val))
         actual = list(streams.map_sequences_as_events(
                 rev_evs_to_seqs, itools.chain.from_iterable(seqs)))
         self.assertEqual(expected, actual)

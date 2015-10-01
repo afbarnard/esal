@@ -70,7 +70,7 @@ def timeline_to_sequence(timeline, start=0):
     """
     for order, event in enumerate(timeline, start):
         yield events.Event(
-            event.seq, order, event.dura, event.ev, event.val)
+            event.seq, order, event.dura, event.typ, event.val)
 
 def make_timeline_to_sequence_flattener(ordering=data_order, start=0):
     """Makes a function that will order concurrent events and convert
@@ -123,9 +123,9 @@ class EventSequence(collections.abc.Sequence):
 
     def types(self):
         """Returns the types of the events in sequence order."""
-        yield from (ev.ev for ev in self.events)
+        yield from (ev.typ for ev in self.events)
 
-    def match(self, seq=Any, time=Any, dura=Any, ev=Any, val=Any,
+    def match(self, seq=Any, time=Any, dura=Any, typ=Any, val=Any,
               start=0, stop=None):
         """Returns the index of the first event that matches the given
         field values.
@@ -135,13 +135,13 @@ class EventSequence(collections.abc.Sequence):
         """
         stop = len(self.events) if stop is None else stop
         for idx in range(start, stop):
-            if self.events[idx].matches(seq, time, dura, ev, val):
+            if self.events[idx].matches(seq, time, dura, typ, val):
                 return idx
         return None
 
-    def matches(self, seq=Any, time=Any, dura=Any, ev=Any, val=Any):
+    def matches(self, seq=Any, time=Any, dura=Any, typ=Any, val=Any):
         """Returns the indices of all the matches that would be returned
         by successive calls to 'match'.
         """
         yield from (idx for idx, event in enumerate(self.events)
-                    if event.matches(seq, time, dura, ev, val))
+                    if event.matches(seq, time, dura, typ, val))

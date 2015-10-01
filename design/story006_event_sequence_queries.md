@@ -50,7 +50,7 @@ processing externally?
   * __getitem__: access events by index, in sorted order
   * types: return event types as a flat sequence given an ordering
     function.  Optional filter for selecting certain event types?
-    (Rename 'ev' -> 'type' in Event to support this method.)
+    (Rename 'ev' -> 'typ' in Event to support this method.)
   * times: return times as a flat sequence, no need to reorder as they
     will be sorted
   * index: forward to underlying list

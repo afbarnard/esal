@@ -83,7 +83,7 @@ class EventStreamOperationsTest(unittest.TestCase):
         expected = tuple(data.evs_for_selection[i] for i in
                          (0, 1, 2, 6, 7, 9, 10, 16))
         actual = tuple(streams.select(
-                data.evs_for_selection, 'ev', ('a', 'b', 'c')))
+                data.evs_for_selection, 'typ', ('a', 'b', 'c')))
         self.assertEqual(expected, actual)
 
     def test_select_times(self):

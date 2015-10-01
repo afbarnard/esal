@@ -35,7 +35,7 @@ class SequenceTests(unittest.TestCase):
         expected = list(data.seq_rand2_15)
         for idx, ev in enumerate(expected):
             expected[idx] = events.Event(
-                ev.seq, idx, ev.dura, ev.ev, ev.val)
+                ev.seq, idx, ev.dura, ev.typ, ev.val)
         actual = list(sequences.timeline_to_sequence(
                 data.seq_rand2_15))
         self.assertEqual(expected, actual)
@@ -109,26 +109,26 @@ class EventSequenceTest(unittest.TestCase):
     def test_contains_field_value(self):
         self.assertIn(('val', None), self.evseq)
         self.assertIn(('val', True), self.evseq)
-        self.assertIn(('ev', 'e'), self.evseq)
+        self.assertIn(('typ', 'e'), self.evseq)
         self.assertIn(('dura', 8.0), self.evseq)
         self.assertIn(('time', 7), self.evseq)
         self.assertNotIn(('time', 8), self.evseq)
         self.assertNotIn(('seq', 320), self.evseq)
 
     def test_match(self):
-        self.assertEqual(16, self.evseq.match(ev='b'))
-        self.assertEqual(8, self.evseq.match(val='lo', ev='f'))
-        self.assertEqual(13, self.evseq.match(ev='c', dura=8, time=6))
-        self.assertIsNone(self.evseq.match(ev='f', val='ok'))
+        self.assertEqual(16, self.evseq.match(typ='b'))
+        self.assertEqual(8, self.evseq.match(val='lo', typ='f'))
+        self.assertEqual(13, self.evseq.match(typ='c', dura=8, time=6))
+        self.assertIsNone(self.evseq.match(typ='f', val='ok'))
         self.assertIsNone(self.evseq.match(time=8))
 
     def test_match_bounds(self):
-        self.assertEqual(14, self.evseq.match(ev='a', start=5))
+        self.assertEqual(14, self.evseq.match(typ='a', start=5))
         self.assertEqual(
-            13, self.evseq.match(ev='c', start=10, stop=15))
-        self.assertIsNone(self.evseq.match(ev='f', start=10))
-        self.assertIsNone(self.evseq.match(ev='b', stop=16))
-        self.assertIsNone(self.evseq.match(ev='c', start=7, stop=13))
+            13, self.evseq.match(typ='c', start=10, stop=15))
+        self.assertIsNone(self.evseq.match(typ='f', start=10))
+        self.assertIsNone(self.evseq.match(typ='b', stop=16))
+        self.assertIsNone(self.evseq.match(typ='c', start=7, stop=13))
         self.assertIsNone(self.evseq.match(start=3, stop=3))
 
     def test_matches(self):

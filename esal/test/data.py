@@ -136,7 +136,7 @@ binary_event_tuples = (
 
 # Event tuples for binary events
 binary_events = tuple(
-    map(lambda tup: events.Event(seq=tup[0], time=tup[1], ev=tup[2]),
+    map(lambda tup: events.Event(seq=tup[0], time=tup[1], typ=tup[2]),
         binary_event_tuples))
 
 # Specific event sequences to be used in preference to indexing events
