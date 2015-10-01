@@ -6,6 +6,7 @@
 import collections
 
 from . import general
+from .general import Any
 
 
 # Export public API
@@ -62,6 +63,12 @@ class Header:
         return self.idxs_to_names
 
 
+def _valuepred_matches_value(valuepred, value):
+    return (valuepred is Any or valuepred == value or
+            (callable(valuepred) and valuepred(value)))
+
+
+# TODO rename 'ev' -> 'type'
 _EVENT_FIELD_NAMES = ('seq', 'time', 'dura', 'ev', 'val')
 
 class Event(collections.namedtuple('_Event', _EVENT_FIELD_NAMES)):
@@ -118,3 +125,20 @@ class Event(collections.namedtuple('_Event', _EVENT_FIELD_NAMES)):
     def sort_key(self):
         """Returns a key for sorting this event."""
         return general.iterable_sort_key(self)
+
+    def matches(self, seq=Any, time=Any, dura=Any, ev=Any, val=Any):
+        """Returns true if the fields of this event are equal to all of
+        the given values; that is, a partial equality match.
+
+        The field values can be:
+        * Any: matches any value.  This is the default and is equivalent
+          to leaving the field out of the equality comparison.
+        * an object: matches by equality
+        * a predicate: matches if the predicate is True for the value
+        """
+        # Order the comparisons by likely to fail first
+        return (_valuepred_matches_value(ev, self.ev) and
+                _valuepred_matches_value(time, self.time) and
+                _valuepred_matches_value(val, self.val) and
+                _valuepred_matches_value(dura, self.dura) and
+                _valuepred_matches_value(seq, self.seq))

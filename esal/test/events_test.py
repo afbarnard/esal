@@ -101,3 +101,25 @@ class EventTest(unittest.TestCase):
     def test_sort_key(self):
         key = general.iterable_sort_key(self.event_fields)
         self.assertEqual(key, self.event.sort_key())
+
+    def test_matches(self):
+        self.assertTrue(self.event.matches(ev='mi'))
+        self.assertTrue(self.event.matches(dura=31, val=True))
+        self.assertTrue(self.event.matches(*self.event_fields))
+        self.assertFalse(self.event.matches(seq=3))
+        self.assertFalse(self.event.matches(ev='a'))
+        self.assertFalse(self.event.matches(val='ok'))
+
+    def test_matches_any(self):
+        self.assertTrue(self.event.matches())
+
+    def test_matches_nones(self):
+        event = events.Event()
+        self.assertTrue(event.matches())
+        self.assertTrue(event.matches(None, None, None, None, None))
+
+    def test_matches_predicates(self):
+        self.assertTrue(self.event.matches(
+            ev=lambda e: e in ('chf', 'ht', 'mi', 'flu'),
+            val=lambda v: v in (None, True, 1),
+            time=lambda t: '2015' in t))
