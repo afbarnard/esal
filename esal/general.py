@@ -140,3 +140,24 @@ def iterable_sort_key(iterable, key=universal_sort_key):
     * key: Function to make a sort key from an item.
     """
     return tuple(key(item) for item in iterable)
+
+
+class _Any(object):
+
+    """Any is a singleton class that represents all values, a sort of
+    complement to None.  Any can be used like None (e.g. 'value is Any')
+    but is distinguishable from None.  Its main use is as a placeholder
+    or default value when None will not work because None is in the set
+    of valid values.
+    """
+
+    _instance = None
+
+    __slots__ = ()
+
+    def __new__(cls):
+        if cls._instance is None:
+            cls._instance = object.__new__(cls)
+        return cls._instance
+
+Any = _Any()

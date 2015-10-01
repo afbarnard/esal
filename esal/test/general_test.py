@@ -224,3 +224,12 @@ class IterableSortKeyTest(unittest.TestCase):
         srtd = sorted(reversed(self.tuples),
                       key=general.iterable_sort_key)
         self.assertSequenceEqual(self.tuples, srtd)
+
+
+class AnyTest(unittest.TestCase):
+
+    def test_not_none(self):
+        self.assertIsNotNone(general.Any)
+
+    def test_singleton(self):
+        self.assertIs(general._Any(), general._Any())
