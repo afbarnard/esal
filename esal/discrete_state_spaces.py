@@ -6,53 +6,58 @@
 import bisect
 import itertools as itools
 
+from . import general
+
 
 class StateSpaceError(Exception):
     pass
 
 
+# TODO refactor to consolidate behavior, perhaps into an abstract superclass DiscreteStateSpace
+
+
 class PermutationSpace(object):
 
     def __init__(self, elements, length=None):
-        self.elements = tuple(elements)
-        self.length = (int(length) if length is not None
-                       else len(self.elements))
-        if not (0 <= self.length <= len(self.elements)):
+        self._elements = tuple(elements)
+        self._length = (int(length) if length is not None
+                        else len(self._elements))
+        if not (0 <= self._length <= len(self._elements)):
             raise StateSpaceError(
                 'Length out of bounds [0, {}]: {}'
-                .format(len(self.elements), length))
-        self.elts_to_idxs = dict(zip(self.elements, itools.count()))
-        if len(self.elements) != len(self.elts_to_idxs):
+                .format(len(self._elements), length))
+        self._elts_to_idxs = dict(zip(self._elements, itools.count()))
+        if len(self._elements) != len(self._elts_to_idxs):
             raise StateSpaceError(
                 'Elements are not unique: {}'
-                .format(self.elements))
-        self.bases = PermutationSpace._permutation_index_bases(
-            len(self.elements), self.length)
+                .format(self._elements))
+        self._bases = PermutationSpace._permutation_index_bases(
+            len(self._elements), self._length)
 
     @staticmethod
-    def _permutation_index_bases(number_elements, permutation_length):
-        if permutation_length == 0:
+    def _permutation_index_bases(number_elements, state_length):
+        if state_length == 0:
             return ()
-        bases = [None] * permutation_length
+        bases = [None] * state_length
         bases[-1] = 1
-        for idx in range(permutation_length - 1, 0, -1):
+        for idx in range(state_length - 1, 0, -1):
             bases[idx - 1] = bases[idx] * (number_elements - idx)
         return bases
 
     @staticmethod
-    def space_size(number_elements, permutation_length):
+    def space_size(number_elements, state_length):
         product = 1
         for n in range(
-                number_elements - permutation_length + 1,
+                number_elements - state_length + 1,
                 number_elements + 1):
             product *= n
         return product
 
     def size(self):
-        if len(self.bases) == 0:
+        if len(self._bases) == 0:
             return 1
         else:
-            return self.bases[0] * len(self.elements)
+            return self._bases[0] * len(self._elements)
 
     __len__ = size
 
@@ -61,16 +66,16 @@ class PermutationSpace(object):
             return 0 <= obj < self.size()
         elif hasattr(obj, '__iter__'):
             # Do membership check without converting to an index
-            perm = tuple(obj)
+            state = tuple(obj)
             # Length must match
-            if len(perm) != self.length:
+            if len(state) != self._length:
                 return False
             # Check each element is valid and used at most once
-            in_use = [False] * len(self.elements)
-            for element in perm:
-                if element not in self.elts_to_idxs:
+            in_use = [False] * len(self._elements)
+            for element in state:
+                if element not in self._elts_to_idxs:
                     return False
-                idx = self.elts_to_idxs[element]
+                idx = self._elts_to_idxs[element]
                 if in_use[idx]:
                     return False
                 in_use[idx] = True
@@ -91,27 +96,27 @@ class PermutationSpace(object):
                 'Index out of bounds [0, {}): {}'
                 .format(self.size(), index))
         # The elements available to use in the permutation
-        free_elements = list(self.elements)
+        free_elements = list(self._elements)
         # The permutation
-        perm = [None] * self.length
+        perm = [None] * self._length
         # Build the permutation by repeatedly dividing the given index
         # by the bases and finding the corresponding unused element
-        for idx in range(self.length):
+        for idx in range(self._length):
             # Which free element to use
-            free_idx = index // self.bases[idx]
+            free_idx = index // self._bases[idx]
             perm[idx] = free_elements[free_idx]
             del free_elements[free_idx]
             # Update the index
-            index %= self.bases[idx]
+            index %= self._bases[idx]
         return perm
 
     __getitem__ = state_of
 
-    def index_of(self, perm):
+    def index_of(self, state):
         index = 0
         used = set()
         idx = 0
-        for element in perm:
+        for element in state:
             # Check for repeated elements
             if element in used:
                 raise StateSpaceError(
@@ -119,52 +124,64 @@ class PermutationSpace(object):
                     .format(element))
             # Count how many elements with lower indices are used
             try:
-                element_idx = self.elts_to_idxs[element]
+                element_idx = self._elts_to_idxs[element]
             except KeyError:
                 raise StateSpaceError(
                     'Element not in permutation space: {}'
                     .format(element))
             num_lower_used = 0
             for elt in used:
-                if self.elts_to_idxs[elt] < element_idx:
+                if self._elts_to_idxs[elt] < element_idx:
                     num_lower_used += 1
             # Add the contribution of this element to the index
-            index += (element_idx - num_lower_used) * self.bases[idx]
+            index += (element_idx - num_lower_used) * self._bases[idx]
             used.add(element)
             idx += 1
-        if idx != self.length:
+        if idx != self._length:
             raise StateSpaceError(
                 'Length out of bounds [0, {}): {}'
-                .format(self.length, idx))
+                .format(self._length, idx))
         return index
 
     def __repr__(self):
         return 'PermutationSpace({}, {})'.format(
-            self.elements, self.length)
+            self._elements, self._length)
+
+    @property
+    def elements(self):
+        return self._elements
+
+    @property
+    def state_min_length(self):
+        return self._length
+
+    @property
+    def state_max_length(self):
+        return self._length
 
 
 class ProductSpace(object):
 
     def __init__(self, elements, length=None):
-        self.elements = tuple(elements)
-        self.length = (int(length) if length is not None
-                       else len(self.elements))
-        if not (0 <= self.length <= len(self.elements)):
+        self._elements = tuple(elements)
+        self._length = (int(length) if length is not None
+                        else len(self._elements))
+        if not (0 <= self._length <= len(self._elements)):
             raise StateSpaceError(
                 'Length out of bounds [0, {}]: {}'
-                .format(len(self.elements), length))
-        self.elts_to_idxs = dict(zip(self.elements, itools.count()))
-        if len(self.elements) != len(self.elts_to_idxs):
+                .format(len(self._elements), length))
+        self._elts_to_idxs = dict(zip(self._elements, itools.count()))
+        if len(self._elements) != len(self._elts_to_idxs):
             raise StateSpaceError(
                 'Elements are not unique: {}'
-                .format(self.elements))
+                .format(self._elements))
 
     @staticmethod
     def space_size(number_elements, length):
         return number_elements ** length
 
     def size(self):
-        return len(self.elements) ** self.length
+        return len(self._elements) ** self._length
 
     __len__ = size
 
@@ -176,12 +193,12 @@ class ProductSpace(object):
             index = 0
             for element in obj:
                 # Check that the element is valid, obj is not too long
-                if (element not in self.elts_to_idxs or
-                        index >= self.length):
+                if (element not in self._elts_to_idxs or
+                        index >= self._length):
                     return False
                 index += 1
             # Length must match
-            return index == self.length
+            return index == self._length
         else:
             return False
 
@@ -198,13 +215,13 @@ class ProductSpace(object):
                 'Index out of bounds [0, {}): {}'
                 .format(self.size(), index))
         # The state
-        state = [None] * self.length
+        state = [None] * self._length
         # Build the state by repeatedly dividing the given index by the
         # base and finding the corresponding element
-        radix = len(self.elements)
-        base = radix ** (self.length - 1) if self.length > 0 else 1
-        for idx in range(self.length):
-            state[idx] = self.elements[index // base]
+        radix = len(self._elements)
+        base = radix ** (self._length - 1) if self._length > 0 else 1
+        for idx in range(self._length):
+            state[idx] = self._elements[index // base]
             index %= base
             base //= radix
         return state
@@ -213,12 +230,12 @@ class ProductSpace(object):
 
     def index_of(self, state):
         index = 0
-        radix = len(self.elements)
-        base = radix ** (self.length - 1) if self.length > 0 else 1
+        radix = len(self._elements)
+        base = radix ** (self._length - 1) if self._length > 0 else 1
         elt_count = 0
         for element in state:
             try:
-                element_idx = self.elts_to_idxs[element]
+                element_idx = self._elts_to_idxs[element]
             except KeyError:
                 raise StateSpaceError(
                     'Element not in product space: {}'
@@ -226,14 +243,27 @@ class ProductSpace(object):
             index += element_idx * base
             base //= radix
             elt_count += 1
-        if elt_count != self.length:
+        if elt_count != self._length:
             raise StateSpaceError(
                 'Length out of bounds [0, {}): {}'
-                .format(self.length, elt_count))
+                .format(self._length, elt_count))
         return index
 
     def __repr__(self):
-        return 'ProductSpace({}, {})'.format(self.elements, self.length)
+        return 'ProductSpace({}, {})'.format(
+            self._elements, self._length)
+
+    @property
+    def elements(self):
+        return self._elements
+
+    @property
+    def state_min_length(self):
+        return self._length
+
+    @property
+    def state_max_length(self):
+        return self._length
 
 
 class CompositeSpace(object):
@@ -241,16 +271,31 @@ class CompositeSpace(object):
     def __init__(self, *spaces):
         # Check if spaces contains a single iterable or a list of spaces
         if len(spaces) == 1 and hasattr(spaces[0], '__iter__'):
-            self.spaces = tuple(spaces[0])
+            self._spaces = tuple(spaces[0])
         else:
-            self.spaces = tuple(spaces)
+            self._spaces = tuple(spaces)
         # Calculate the boundaries of the index partitions
-        self.partitions = [0] * (len(self.spaces) + 1)
-        for idx, space in enumerate(self.spaces):
-            self.partitions[idx + 1] = self.partitions[idx] + len(space)
+        self._partitions = [0] * (len(self._spaces) + 1)
+        for idx, space in enumerate(self._spaces):
+            self._partitions[idx + 1] = self._partitions[idx] + len(space)
+        # Set fields typically managed by subclasses if not already set
+        if not hasattr(self, '_elements'):
+            self._elements = tuple(general.firsts(
+                itools.chain.from_iterable(
+                    space.elements for space in self._spaces)))
+        if not hasattr(self, '_min_length'):
+            self._min_length = 0
+            if spaces:
+                self._min_length = min(
+                    space.state_min_length for space in spaces)
+        if not hasattr(self, '_max_length'):
+            self._max_length = 0
+            if spaces:
+                self._max_length = max(
+                    space.state_max_length for space in spaces)
 
     def size(self):
-        return self.partitions[-1]
+        return self._partitions[-1]
 
     __len__ = size
 
@@ -259,7 +304,7 @@ class CompositeSpace(object):
             return 0 <= obj < self.size()
         else:
             state = tuple(obj)
-            return any(state in space for space in self.spaces)
+            return any(state in space for space in self._spaces)
 
     def state_of(self, index):
         # Check for bounds
@@ -268,22 +313,34 @@ class CompositeSpace(object):
                 'Index out of bounds [0, {}): {}'
                 .format(self.size(), index))
         # Find which subspace this index belongs to
-        idx = bisect.bisect(self.partitions, index) - 1
+        idx = bisect.bisect(self._partitions, index) - 1
         # Return the appropriate state of the subspace
-        return self.spaces[idx].state_of(index - self.partitions[idx])
+        return self._spaces[idx].state_of(index - self._partitions[idx])
 
     __getitem__ = state_of
 
     def index_of(self, state):
         state = tuple(state)
-        for idx, space in enumerate(self.spaces):
+        for idx, space in enumerate(self._spaces):
             if state in space:
-                return self.partitions[idx] + space.index_of(state)
+                return self._partitions[idx] + space.index_of(state)
         raise StateSpaceError('State not in space: {}'.format(state))
 
     def __repr__(self):
-        return 'CompositeSpace({}, {})'.format(len(self.spaces),
+        return 'CompositeSpace({}, {})'.format(len(self._spaces),
                                                len(self))
+
+    @property
+    def elements(self):
+        return self._elements
+
+    @property
+    def state_min_length(self):
+        return self._min_length
+
+    @property
+    def state_max_length(self):
+        return self._max_length
 
 
 def _handle_length_arguments(length1, length2, default_max, default_min=0):
@@ -306,12 +363,12 @@ def _handle_length_arguments(length1, length2, default_max, default_min=0):
 class MultiLengthPermutationSpace(CompositeSpace):
 
     def __init__(self, elements, length1=None, length2=None):
-        self.elements = tuple(elements)
-        self.min_length, self.max_length = _handle_length_arguments(
-            length1, length2, len(self.elements))
+        self._elements = tuple(elements)
+        self._min_length, self._max_length = _handle_length_arguments(
+            length1, length2, len(self._elements))
         super().__init__(
-            PermutationSpace(self.elements, length)
-            for length in range(self.min_length, self.max_length + 1))
+            PermutationSpace(self._elements, length)
+            for length in range(self._min_length, self._max_length + 1))
 
     @staticmethod
     def space_size(number_elements, length1=None, length2=None):
@@ -322,18 +379,18 @@ class MultiLengthPermutationSpace(CompositeSpace):
 
     def __repr__(self):
         return 'MultiLengthPermutationSpace({}, {}, {})'.format(
-            self.elements, self.min_length, self.max_length)
+            self._elements, self._min_length, self._max_length)
 
 
 class MultiLengthProductSpace(CompositeSpace):
 
     def __init__(self, elements, length1=None, length2=None):
-        self.elements = tuple(elements)
-        self.min_length, self.max_length = _handle_length_arguments(
-            length1, length2, len(self.elements))
+        self._elements = tuple(elements)
+        self._min_length, self._max_length = _handle_length_arguments(
+            length1, length2, len(self._elements))
         super().__init__(
-            ProductSpace(self.elements, length)
-            for length in range(self.min_length, self.max_length + 1))
+            ProductSpace(self._elements, length)
+            for length in range(self._min_length, self._max_length + 1))
 
     @staticmethod
     def space_size(number_elements, length1=None, length2=None):
@@ -344,4 +401,4 @@ class MultiLengthProductSpace(CompositeSpace):
 
     def __repr__(self):
         return 'MultiLengthProductSpace({}, {}, {})'.format(
-            self.elements, self.min_length, self.max_length)
+            self._elements, self._min_length, self._max_length)

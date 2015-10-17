@@ -48,8 +48,8 @@ class PermutationSpaceTest(unittest.TestCase):
         space1 = dss.PermutationSpace(iter('elmnts'), 6)
         space2 = dss.PermutationSpace(iter('elmnts'))
         self.assertEqual(space1.elements, space2.elements)
-        self.assertEqual(space1.length, space2.length)
-        self.assertEqual(space1.bases, space2.bases)
+        self.assertEqual(space1._length, space2._length)
+        self.assertEqual(space1._bases, space2._bases)
 
     def test_empty_elements(self):
         space = dss.PermutationSpace(iter(()), 0)
@@ -181,7 +181,7 @@ class ProductSpaceTest(unittest.TestCase):
         space1 = dss.ProductSpace(iter('elmnts'), 6)
         space2 = dss.ProductSpace(iter('elmnts'))
         self.assertEqual(space1.elements, space2.elements)
-        self.assertEqual(space1.length, space2.length)
+        self.assertEqual(space1._length, space2._length)
 
     def test_empty_elements(self):
         space = dss.ProductSpace(iter(()), 0)
@@ -300,12 +300,18 @@ class CompositeSpaceTest(unittest.TestCase):
             dss.ProductSpace('defghijklm', 1),
             dss.ProductSpace('nop', 3),
             )
+        self.elements = 'abckqrselmntxyzdfghijop'
+        self.min_length = 1
+        self.max_length = 3
 
     def test_empty(self):
         self.space = dss.CompositeSpace()
         self.assertEqual(0, len(self.space))
         self.assertNotIn(0, self.space)
         self.assertNotIn(iter(()), self.space)
+        self.assertEqual((), self.space.elements)
+        self.assertEqual(0, self.space.state_min_length)
+        self.assertEqual(0, self.space.state_max_length)
 
     def test_size(self):
         self.assertEqual(len(self.states), len(self.space))
@@ -323,6 +329,15 @@ class CompositeSpaceTest(unittest.TestCase):
     def test_index_of(self):
         for idx, state in enumerate(self.states):
             self.assertEqual(idx, self.space.index_of(iter(state)))
+
+    def test_elements(self):
+        self.assertEqual(tuple(self.elements), self.space.elements)
+
+    def test_state_min_length(self):
+        self.assertEqual(self.min_length, self.space.state_min_length)
+
+    def test_state_max_length(self):
+        self.assertEqual(self.max_length, self.space.state_max_length)
 
 
 class MultiLengthPermutationSpaceTest(CompositeSpaceTest):
@@ -349,6 +364,9 @@ class MultiLengthPermutationSpaceTest(CompositeSpaceTest):
 
     def setUp(self):
         self.space = dss.MultiLengthPermutationSpace('abcde', 1, 3)
+        self.elements = 'abcde'
+        self.min_length = 1
+        self.max_length = 3
 
     def test_space_size(self):
         space_size = dss.MultiLengthPermutationSpace.space_size
@@ -403,6 +421,9 @@ class MultiLengthProductSpaceTest(CompositeSpaceTest):
 
     def setUp(self):
         self.space = dss.MultiLengthProductSpace('abcde', 1, 3)
+        self.elements = 'abcde'
+        self.min_length = 1
+        self.max_length = 3
 
     def test_space_size(self):
         space_size = dss.MultiLengthProductSpace.space_size
