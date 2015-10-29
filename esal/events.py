@@ -141,3 +141,10 @@ class Event(collections.namedtuple('_Event', _EVENT_FIELD_NAMES)):
                 _valuepred_matches_value(val, self.val) and
                 _valuepred_matches_value(dura, self.dura) and
                 _valuepred_matches_value(seq, self.seq))
+
+    # Make a friendly name for namedtuple._replace
+    def replace(self, **kwds):
+        """Returns a new Event with the given fields replaced by the given
+        values.  (Wraps namedtuple._replace.)
+        """
+        return self._replace(**kwds)
