@@ -35,7 +35,7 @@ class SequenceTests(unittest.TestCase):
         expected = list(data.seq_rand2_15)
         for idx, ev in enumerate(expected):
             expected[idx] = events.Event(
-                ev.seq, idx, ev.dura, ev.typ, ev.val)
+                ev.seq, idx, ev.end, ev.typ, ev.val)
         actual = list(sequences.timeline_to_sequence(
                 data.seq_rand2_15))
         self.assertEqual(expected, actual)
@@ -110,7 +110,7 @@ class EventSequenceTest(unittest.TestCase):
         self.assertIn(('val', None), self.evseq)
         self.assertIn(('val', True), self.evseq)
         self.assertIn(('typ', 'e'), self.evseq)
-        self.assertIn(('dura', 8.0), self.evseq)
+        self.assertIn(('end', 8.0), self.evseq)
         self.assertIn(('time', 7), self.evseq)
         self.assertNotIn(('time', 8), self.evseq)
         self.assertNotIn(('seq', 320), self.evseq)
@@ -118,7 +118,7 @@ class EventSequenceTest(unittest.TestCase):
     def test_match(self):
         self.assertEqual(16, self.evseq.match(typ='b'))
         self.assertEqual(8, self.evseq.match(val='lo', typ='f'))
-        self.assertEqual(13, self.evseq.match(typ='c', dura=8, time=6))
+        self.assertEqual(13, self.evseq.match(typ='c', end=8, time=6))
         self.assertIsNone(self.evseq.match(typ='f', val='ok'))
         self.assertIsNone(self.evseq.match(time=8))
 
@@ -133,7 +133,7 @@ class EventSequenceTest(unittest.TestCase):
 
     def test_matches(self):
         expected = (1, 5, 6, 10)
-        actual = tuple(self.evseq.matches(dura=None, val=None))
+        actual = tuple(self.evseq.matches(end=None, val=None))
         self.assertEqual(expected, actual)
         expected = ()
         actual = tuple(self.evseq.matches(time=8))
