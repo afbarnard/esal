@@ -1,7 +1,8 @@
 # Event objects
-#
-# Copyright (c) 2015 Aubrey Barnard.  This is free software.  See
+
+# Copyright (c) 2018 Aubrey Barnard.  This is free software.  See
 # LICENSE for details.
+
 
 import collections
 
@@ -13,14 +14,15 @@ from .general import Any
 __all__ = (
     'Header',
     'Event',
-    )
+)
 
 
 class Header:
 
-    """A Header describes a collection of fields, like a tuple or a row
-    in a table, by giving the fields names and indices.  This supports
-    field access by name for objects without such existing support.
+    """
+    A Header describes a collection of fields, like a tuple or a row in a
+    table, by giving the fields names and indices.  This supports field
+    access by name for objects without such existing support.
     """
 
     # TODO what about a sparse header (non-contiguous indices)?
@@ -70,9 +72,11 @@ def _valuepred_matches_value(valuepred, value):
 
 _EVENT_FIELD_NAMES = ('seq', 'time', 'dura', 'typ', 'val')
 
+
 class Event(collections.namedtuple('_Event', _EVENT_FIELD_NAMES)):
 
-    """Event(sequence_id, start_time, duration, event_type, value)
+    """
+    Event(sequence_id, start_time, duration, event_type, value)
 
     An event is a tuple of values representing the occurrence of an
     event in a sequence.  The fields are ordered so that events have a
@@ -106,8 +110,9 @@ class Event(collections.namedtuple('_Event', _EVENT_FIELD_NAMES)):
 
     # Enable access by name as well as index
     def __getitem__(self, key):
-        """Returns the item corresponding to the given key which may be
-        the index or name of a field.
+        """
+        Returns the item corresponding to the given key which may be the
+        index or name of a field.
         """
         if isinstance(key, (int, slice)):
             return super().__getitem__(key)
@@ -126,8 +131,9 @@ class Event(collections.namedtuple('_Event', _EVENT_FIELD_NAMES)):
         return general.iterable_sort_key(self)
 
     def matches(self, seq=Any, time=Any, dura=Any, typ=Any, val=Any):
-        """Returns true if the fields of this event are equal to all of
-        the given values; that is, a partial equality match.
+        """
+        Returns true if the fields of this event are equal to all of the
+        given values; that is, a partial equality match.
 
         The field values can be:
         * Any: matches any value.  This is the default and is equivalent
@@ -144,7 +150,8 @@ class Event(collections.namedtuple('_Event', _EVENT_FIELD_NAMES)):
 
     # Make a friendly name for namedtuple._replace
     def replace(self, **kwds):
-        """Returns a new Event with the given fields replaced by the given
+        """
+        Returns a new Event with the given fields replaced by the given
         values.  (Wraps namedtuple._replace.)
         """
         return self._replace(**kwds)
