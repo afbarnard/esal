@@ -101,7 +101,7 @@ class Event(collections.namedtuple('_Event', _EVENT_FIELD_NAMES)):
       happening?).
 
     For example, a blood pressure measurement could be represented by
-    the following two events:
+    the following two point events:
 
         Event(patient0123456789, '2015-04-25T11:39', None, bp_systolic, 120)
         Event(patient0123456789, '2015-04-25T11:39', None, bp_diastolic, 80)
@@ -162,3 +162,7 @@ class Event(collections.namedtuple('_Event', _EVENT_FIELD_NAMES)):
         values.  (Wraps namedtuple._replace.)
         """
         return self._replace(**kwds)
+
+
+def point_event(seq, time, typ, val=None):
+    return Event(seq=seq, time=time, typ=typ, val=val)
