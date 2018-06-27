@@ -56,10 +56,57 @@ def _cmp(obj1, obj2):
         return 0
 
 
+def _union(itvl1, itvl2):
+    if itvl1.is_empty():
+        return (itvl2,)
+    elif itvl2.is_empty():
+        return (itvl1,)
+    elif itvl1.hi < itvl2.lo:
+        return (itvl1, itvl2)
+    elif itvl2.hi < itvl1.lo:
+        return (itvl2, itvl1)
+    elif itvl1.hi == itvl2.lo:
+        if itvl1.is_hi_open and itvl2.is_lo_open:
+            return (itvl1, itvl2)
+        else:
+            return (Interval(itvl1.lo, itvl2.hi,
+                             itvl1.is_lo_open, itvl2.is_hi_open),)
+    elif itvl2.hi == itvl1.lo:
+        if itvl2.is_hi_open and itvl1.is_lo_open:
+            return (itvl2, itvl1)
+        else:
+            return (Interval(itvl2.lo, itvl1.hi,
+                             itvl2.is_lo_open, itvl1.is_hi_open),)
+    else:
+        lo, lo_open = min((itvl1.lo, itvl1.is_lo_open),
+                          (itvl2.lo, itvl2.is_lo_open))
+        hi, hi_open = max((itvl1.hi, not itvl1.is_hi_open),
+                          (itvl2.hi, not itvl2.is_hi_open))
+        hi_open = not hi_open
+        return (Interval(lo, hi, lo_open, hi_open),)
+
+
+def _intersection(itvl1, itvl2):
+    lo, lo_open = max((itvl1.lo, itvl1.is_lo_open),
+                      (itvl2.lo, itvl2.is_lo_open))
+    hi, hi_open = min((itvl1.hi, not itvl1.is_hi_open),
+                      (itvl2.hi, not itvl2.is_hi_open))
+    hi_open = not hi_open
+    # Empty
+    if lo > hi:
+        return Interval(0, lo_open=True)
+    # Either empty or a point depending on if both are closed
+    elif lo == hi:
+        return Interval(lo, lo_open=(lo_open or hi_open))
+    # Overlapping
+    else:
+        return Interval(lo, hi, lo_open, hi_open)
+
+
 class Interval:
     """Interval for any orderable type"""
 
-    # TODO slots
+    __slots__ = ('_lo', '_hi', '_lopen', '_hopen', '_length')
 
     def __init__(
             self,
@@ -73,21 +120,22 @@ class Interval:
         self._hi = hi if hi is not None else lo
         self._lopen = lo_open
         self._hopen = hi_open
-        self._len = length
+        self._length = length
         # Make sure lo <= hi
-        if lo > hi:
-            self._lo = hi
-            self._hi = lo
+        if self._lo > self._hi:
+            self._lo, self._hi = self._hi, self._lo
+            self._lopen, self._hopen = self._hopen, self._lopen
         assert self._lo <= self._hi
-        # Make sure point intervals are sensible
+        # Make sure point / empty intervals are sensible
         if self._lo == self._hi:
-            self._lopen = False
-            self._hopen = False
-            self._len = 0
+            is_empty = self._lopen or self._hopen
+            self._lopen = is_empty
+            self._hopen = is_empty
+            self._length = 0
         # Try to compute the length
         elif length is None:
             try:
-                self._len = hi - lo
+                self._length = self._hi - self._lo
             except TypeError:
                 pass
 
@@ -107,34 +155,89 @@ class Interval:
     def is_hi_open(self):
         return self._hopen
 
-    def __len__(self):
-        """
-        Return the length of this interval or `None` if the length is
-        unknown.
-        """
-        return self._len
+    def is_empty(self):
+        return (self.lo == self.hi and
+                self.is_lo_open and self.is_hi_open)
+
+    def is_point(self):
+        return (self.lo == self.hi and
+                not (self.is_lo_open or self.is_hi_open))
+
+    def length(self):
+        return self._length
+
+    def __eq__(self, other):
+        return self is other or (
+            isinstance(other, Interval) and
+            (self.is_empty() and other.is_empty() or
+             self.lo == other.lo and
+             self.hi == other.hi and
+             self.is_lo_open == other.is_lo_open and
+             self.is_hi_open == other.is_hi_open))
+
+    def __repr__(self):
+        return 'Interval({!r}, {!r}, {!r}, {!r}, {!r})'.format(
+            self.lo,
+            self.hi,
+            self.is_lo_open,
+            self.is_hi_open,
+            self.length(),
+        )
+
+    def __str__(self):
+        length = self.length()
+        return '{}({}, {}{}){}'.format(
+            'o' if self.is_lo_open else 'x',
+            self.lo,
+            self.hi,
+            '; {}'.format(length) if length is not None else '',
+            'o' if self.is_hi_open else 'x',
+        )
 
     # Python set API
 
     def __contains__(self, item):
+        if isinstance(item, Interval):
+            return item.issubset(self)
         return (self.lo < item < self.hi or
                 (not self.is_lo_open and self.lo == item) or
                 (not self.is_hi_open and self.hi == item))
 
     def issubset(self, other):
-        pass # TODO
+        if self.is_empty():
+            return True
+        if self.lo < other.lo or self.hi > other.hi:
+            return False
+        return ((self.lo > other.lo or
+                 self.is_lo_open >= other.is_lo_open) and
+                (self.hi < other.hi or
+                 self.is_hi_open >= other.is_hi_open))
 
     def union(self, *others):
-        pass # TODO
+        itvls = [self]
+        itvls.extend(others)
+        itvls.sort(key=lambda i: (i.lo, i.hi))
+        unioned = [itvls[0]]
+        for itvl in itvls[1:]:
+            unioned[-1:] = _union(unioned[-1], itvl)
+        if len(unioned) > 1:
+            return CompoundInterval(*unioned)
+        else:
+            return unioned[0]
 
     def intersection(self, *others):
-        pass # TODO
+        itvl = self
+        for other in others:
+            itvl = _intersection(itvl, other)
+            if itvl.is_empty():
+                break
+        return itvl
 
-    def difference(self, *others):
-        pass # TODO
+    def difference(self, *others): # TODO
+        raise NotImplementedError()
 
-    def symmetric_difference(self, other):
-        pass # TODO
+    def symmetric_difference(self, other): # TODO
+        raise NotImplementedError()
 
     # Allen's interval algebra
 
@@ -168,3 +271,52 @@ class Interval:
         # The Allen number is now in [0:12].  Convert it to an
         # enumeration number and return the relation.
         return AllenRelation(allen_num - 6)
+
+
+class CompoundInterval:
+
+    def __init__(self, *intervals):
+        if not intervals:
+            raise ValueError('No intervals passed to constructor.')
+        _intervals = []
+        for itvl in intervals:
+            if not isinstance(itvl, Interval):
+                raise TypeError('Not an Interval: {!r}'.format(itvl))
+            _intervals.append(itvl)
+        self._intervals = sorted(_intervals, key=lambda i: (i.lo, i.hi))
+        self._hi = max(i.hi for i in self._intervals)
+
+    @property
+    def lo(self):
+        return self._intervals[0].lo
+
+    @property
+    def hi(self):
+        return self._hi
+
+    def is_empty(self):
+        return all(i.is_empty() for i in self._intervals)
+
+    def length(self):
+        """
+        Return the sum of the known lengths of the intervals in this
+        compound interval or `None` if all of the lengths are unknown.
+        """
+        lengths = [i.length() for i in self._intervals]
+        lengths = [l for l in lengths if l is not None]
+        if lengths:
+            return sum(lengths)
+        else:
+            return None
+
+    def __contains__(self, item):
+        return any(i.__contains__(item) for i in self._intervals)
+
+    def __len__(self):
+        return len(self._intervals)
+
+    def __iter__(self):
+        return iter(self._intervals)
+
+    def __repr__(self):
+        return 'CompoundInterval({!r})'.format(self._intervals)
