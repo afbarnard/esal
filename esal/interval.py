@@ -3,6 +3,7 @@
 # Copyright (c) 2018 Aubrey Barnard.  This is free software.  See
 # LICENSE for details.
 
+
 from enum import Enum
 
 
@@ -166,6 +167,9 @@ class Interval:
     def length(self):
         return self._length
 
+    def key(self):
+        return (self.lo, self.is_lo_open, self.hi, not self.is_hi_open)
+
     def __eq__(self, other):
         return self is other or (
             isinstance(other, Interval) and
@@ -174,6 +178,24 @@ class Interval:
              self.hi == other.hi and
              self.is_lo_open == other.is_lo_open and
              self.is_hi_open == other.is_hi_open))
+
+    def __hash__(self):
+        if self.is_empty():
+            return 0
+        else:
+            return hash(self.key())
+
+    def __lt__(self, other):
+        return self.key() < other.key()
+
+    def __le__(self, other):
+        return self.key() <= other.key()
+
+    def __gt__(self, other):
+        return self.key() > other.key()
+
+    def __ge__(self, other):
+        return self.key() >= other.key()
 
     def __repr__(self):
         return 'Interval({!r}, {!r}, {!r}, {!r}, {!r})'.format(
