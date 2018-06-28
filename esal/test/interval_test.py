@@ -162,16 +162,93 @@ class IntervalTest(unittest.TestCase):
         i = Interval(3, hi_open=True)
         self.assertTrue(i.is_empty(), i)
 
+    _orderings = (
+        # Empty (empty is always less than non-empty)
+        (Interval(52, lo_open=True), Interval(5, 21), 'lt'),
+        (Interval(50, lo_open=True), Interval(50, lo_open=True), 'eq'),
+        (Interval(2, lo_open=True), Interval(46, lo_open=True), 'eq'),
+        (Interval(7, 26), Interval(27, lo_open=True), 'gt'),
+        # Before
+        (Interval(8, 54), Interval(61, 98), 'lt'),
+        # Abut before
+        (Interval(46, 50), Interval(50, 57), 'lt'),
+        # Overlap before
+        (Interval(39, 60), Interval(57, 71), 'lt'),
+        # Outside end
+        (Interval(5, 54, True, True), Interval(47, 54, True, True), 'lt'),
+        (Interval(7, 85, True, True), Interval(83, 85, True, False), 'lt'),
+        (Interval(21, 99, True, False), Interval(46, 99, True, True), 'lt'),
+        (Interval(1, 25, True, False), Interval(20, 25, True, False), 'lt'),
+        # Outside
+        (Interval(3, 70), Interval(36, 67), 'lt'),
+        # Inside begin
+        (Interval(29, 73, False, True), Interval(29, 96, False, True), 'lt'),
+        (Interval(2, 25, False, True), Interval(2, 43, True, True), 'lt'),
+        (Interval(52, 62, True, True), Interval(52, 92, False, True), 'gt'),
+        (Interval(2, 7, True, True), Interval(2, 47, True, True), 'lt'),
+        # Equal
+        (Interval(30, 36, False, True), Interval(30, 36, False, True), 'eq'),
+        (Interval(1, 9, False, True), Interval(1, 9, False, False), 'lt'),
+        (Interval(37, 39, False, True), Interval(37, 39, True, True), 'lt'),
+        (Interval(11, 42, False, True), Interval(11, 42, True, False), 'lt'),
+        (Interval(9, 73, False, False), Interval(9, 73, False, True), 'gt'),
+        (Interval(35, 49, False, False), Interval(35, 49, False, False), 'eq'),
+        (Interval(18, 82, False, False), Interval(18, 82, True, True), 'lt'),
+        (Interval(16, 40, False, False), Interval(16, 40, True, False), 'lt'),
+        (Interval(66, 94, True, True), Interval(66, 94, False, True), 'gt'),
+        (Interval(34, 43, True, True), Interval(34, 43, False, False), 'gt'),
+        (Interval(54, 75, True, True), Interval(54, 75, True, True), 'eq'),
+        (Interval(35, 48, True, True), Interval(35, 48, True, False), 'lt'),
+        (Interval(44, 63, True, False), Interval(44, 63, False, True), 'gt'),
+        (Interval(9, 13, True, False), Interval(9, 13, False, False), 'gt'),
+        (Interval(3, 50, True, False), Interval(3, 50, True, True), 'gt'),
+        (Interval(22, 33, True, False), Interval(22, 33, True, False), 'eq'),
+        # Outside begin
+        (Interval(60, 90, False, True), Interval(60, 87, False, True), 'gt'),
+        (Interval(17, 45, False, True), Interval(17, 38, True, True), 'lt'),
+        (Interval(62, 76, True, True), Interval(62, 70, False, True), 'gt'),
+        (Interval(16, 54, True, True), Interval(16, 34, True, True), 'gt'),
+        # Inside
+        (Interval(57, 58), Interval(0, 95), 'gt'),
+        # Inside end
+        (Interval(44, 49, True, True), Interval(25, 49, True, True), 'gt'),
+        (Interval(25, 73, True, True), Interval(7, 73, True, False), 'gt'),
+        (Interval(81, 94, True, False), Interval(12, 94, True, True), 'gt'),
+        (Interval(82, 96, True, False), Interval(41, 96, True, False), 'gt'),
+        # Overlap after
+        (Interval(29, 96), Interval(28, 42), 'gt'),
+        # Abut after
+        (Interval(42, 72), Interval(41, 42), 'gt'),
+        # After
+        (Interval(97, 99), Interval(86, 87), 'gt'),
+    )
 
     def test___eq__(self):
-        self.assertEqual(Interval(1, 2), Interval(1, 2))
-        self.assertEqual(Interval(1, lo_open=True),
-                         Interval(2, lo_open=True))
-        self.assertNotEqual(Interval(1, 2),
-                            Interval(1, 2, lo_open=True))
-        self.assertNotEqual(Interval(1, 2, lo_open=True, hi_open=True),
-                            Interval(1, 2, lo_open=True))
+        for i1, i2, cmp_exp in IntervalTest._orderings:
+            cmp_act = i1 == i2
+            self.assertEqual(cmp_exp == 'eq', cmp_act, (i1, i2))
+        # Check with different type
         self.assertNotEqual(Interval(1, 2), 3)
+
+    def test___lt__(self):
+        for i1, i2, cmp_exp in IntervalTest._orderings:
+            cmp_act = i1 < i2
+            self.assertEqual(cmp_exp == 'lt', cmp_act, (i1, i2))
+
+    def test___le__(self):
+        for i1, i2, cmp_exp in IntervalTest._orderings:
+            cmp_act = i1 <= i2
+            self.assertEqual(cmp_exp in ('lt', 'eq'), cmp_act, (i1, i2))
+
+    def test___gt__(self):
+        for i1, i2, cmp_exp in IntervalTest._orderings:
+            cmp_act = i1 > i2
+            self.assertEqual(cmp_exp == 'gt', cmp_act, (i1, i2))
+
+    def test___ge__(self):
+        for i1, i2, cmp_exp in IntervalTest._orderings:
+            cmp_act = i1 >= i2
+            self.assertEqual(cmp_exp in ('gt', 'eq'), cmp_act, (i1, i2))
 
     _subsets = (
         # Empty

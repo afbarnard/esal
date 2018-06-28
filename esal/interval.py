@@ -174,10 +174,7 @@ class Interval:
         return self is other or (
             isinstance(other, Interval) and
             (self.is_empty() and other.is_empty() or
-             self.lo == other.lo and
-             self.hi == other.hi and
-             self.is_lo_open == other.is_lo_open and
-             self.is_hi_open == other.is_hi_open))
+             self.key() == other.key()))
 
     def __hash__(self):
         if self.is_empty():
@@ -186,15 +183,31 @@ class Interval:
             return hash(self.key())
 
     def __lt__(self, other):
+        if other.is_empty():
+            return False
+        if self.is_empty():
+            return True
         return self.key() < other.key()
 
     def __le__(self, other):
+        if self.is_empty():
+            return True
+        if other.is_empty():
+            return False
         return self.key() <= other.key()
 
     def __gt__(self, other):
+        if self.is_empty():
+            return False
+        if other.is_empty():
+            return True
         return self.key() > other.key()
 
     def __ge__(self, other):
+        if other.is_empty():
+            return True
+        if self.is_empty():
+            return False
         return self.key() >= other.key()
 
     def __repr__(self):
