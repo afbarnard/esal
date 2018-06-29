@@ -6,6 +6,8 @@
 
 from enum import Enum
 
+from . import general
+
 
 # Export public API
 __all__ = (
@@ -46,15 +48,6 @@ class AllenRelation(Enum):
 
     def inverse(self):
         return AllenRelation(-self.value)
-
-
-def _cmp(obj1, obj2):
-    if obj1 < obj2:
-        return -1
-    elif obj1 > obj2:
-        return 1
-    else:
-        return 0
 
 
 def _union(itvl1, itvl2):
@@ -279,12 +272,12 @@ class Interval:
     def allen_relation(self, other):
         # Order the lo bound wrt the other bounds.  There are 5
         # possibilities, so convert to a base 5 number.
-        cmp_lolo = _cmp(self.lo, other.lo)
-        cmp_lohi = _cmp(self.lo, other.hi)
+        cmp_lolo = general.cmp(self.lo, other.lo)
+        cmp_lohi = general.cmp(self.lo, other.hi)
         lo_num = cmp_lolo + cmp_lohi + 2
         # Order the hi bound wrt the other bounds
-        cmp_hilo = _cmp(self.hi, other.lo)
-        cmp_hihi = _cmp(self.hi, other.hi)
+        cmp_hilo = general.cmp(self.hi, other.lo)
+        cmp_hihi = general.cmp(self.hi, other.hi)
         hi_num = cmp_hilo + cmp_hihi + 2
         # The hi number must be at least the lo number.  This limits the
         # possibilities to [5, 4, 3, 2, 1].  The cumulative sums of this
