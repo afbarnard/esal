@@ -205,6 +205,12 @@ class EventSequence:
                     return False
             return True
 
+    def subsequence(self, when_lo, when_hi):
+        _, (lo, hi) = sose.binary_search(
+            self._whens, when_lo, target_key_hi=when_hi,
+            target=sose.Target.range)
+        return self._events[lo:hi]
+
     def pprint(self, margin=0, indent=2, file=sys.stdout):
         margin_space = ' ' * margin
         indent_space = ' ' * indent

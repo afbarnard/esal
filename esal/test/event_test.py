@@ -182,3 +182,25 @@ class EventSequenceTest(unittest.TestCase):
         for seq, exists in seqs:
             self.assertEqual(
                 exists, self.es.before(*seq, strict=False), seq)
+
+    def test_subsequence(self):
+        ordered_evs = sorted(((e.when, e) for e in self.evs),
+                             key=lambda x: (x[0], x[1].type))
+        los_his = (
+            # Before empty
+            (-10, -1),
+            # Overlap before
+            (-1, 3),
+            # Middle
+            (3, 9),
+            # Middle empty
+            (7, 8),
+            # Overlap after
+            (10, 20),
+            # After empty
+            (20, 100),
+        )
+        for lo, hi in los_his:
+            expected = tuple(
+                x[1] for x in ordered_evs if lo <= x[0] <= hi)
+            self.assertEqual(expected, self.es.subsequence(lo, hi))
