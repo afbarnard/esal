@@ -452,3 +452,9 @@ class IntervalTest(unittest.TestCase):
             for itvls in (intervals, tuple(reversed(intervals))):
                 i_act = itvls[0].intersection(*itvls[1:])
                 self.assertEqual(i_exp, i_act)
+
+    def test_intersects(self):
+        for intervals, i_exp in IntervalTest._intersections:
+            for itvls in (intervals, tuple(reversed(intervals))):
+                self.assertEqual(not i_exp.is_empty(),
+                                 itvls[0].intersects(itvls[1]))

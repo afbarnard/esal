@@ -80,12 +80,17 @@ def _union(itvl1, itvl2):
         return (Interval(lo, hi, lo_open, hi_open),)
 
 
-def _intersection(itvl1, itvl2):
+def _intersection_bounds(itvl1, itvl2):
     lo, lo_open = max((itvl1.lo, itvl1.is_lo_open),
                       (itvl2.lo, itvl2.is_lo_open))
     hi, hi_open = min((itvl1.hi, not itvl1.is_hi_open),
                       (itvl2.hi, not itvl2.is_hi_open))
     hi_open = not hi_open
+    return (lo, hi, lo_open, hi_open)
+
+
+def _intersection(itvl1, itvl2):
+    lo, hi, lo_open, hi_open = _intersection_bounds(itvl1, itvl2)
     # Empty
     if lo > hi:
         return Interval(0, lo_open=True)
@@ -213,12 +218,10 @@ class Interval:
         )
 
     def __str__(self):
-        length = self.length()
-        return '{}({}, {}{}){}'.format(
+        return '{}({}, {}){}'.format(
             'o' if self.is_lo_open else 'x',
             self.lo,
             self.hi,
-            '; {}'.format(length) if length is not None else '',
             'o' if self.is_hi_open else 'x',
         )
 
@@ -252,6 +255,18 @@ class Interval:
             return CompoundInterval(*unioned)
         else:
             return unioned[0]
+
+    def intersects(self, other):
+        lo, hi, lo_open, hi_open = _intersection_bounds(self, other)
+        # Empty
+        if lo > hi:
+            return False
+        # Either empty or a point depending on if both are closed
+        elif lo == hi:
+            return not (lo_open or hi_open)
+        # Overlapping
+        else:
+            return True
 
     def intersection(self, *others):
         itvl = self
