@@ -6,7 +6,7 @@ Esal ("easel") is a library for the descriptive statistical analysis and
 manipulation of event sequences and timelines.  Esal is intended to be
 used for exploring event sequence data and preparing data for modeling,
 but does not do any modeling itself.  Conceptually, Esal is a
-representation for a dataset of sequences/timelines and an associated
+representation for a dataset of sequences / timelines and an associated
 set of meaningful operations (selection, counting, transformation).
 
 
@@ -14,7 +14,16 @@ Features
 --------
 
 This project is in the early design and implementation stages.  The
-planned features are:
+implemented features are:
+
+* Event objects
+* Event sequence data structure for the efficient querying of event
+  sequences
+* Interval objects
+* Allen's interval algebra (constant-time implementation that uses the
+  minimum number of comparisons)
+
+The planned features are:
 
 * Selection and counting of sequences
 * Selection and counting of events
@@ -22,11 +31,26 @@ planned features are:
 * Temporal statistics
 * Reading/Writing various relational and flat representations
 
+Some of the planned features have already been implemented but haven't
+yet been organized into an official API.  Feel free to look through the
+code.  Suggestions are welcome.
+
 
 Requirements
 ------------
 
 * Python 3
+
+
+Install
+-------
+
+    pip3 install [--user] https://github.com/afbarnard/esal/archive/<name>.zip#egg=esal
+
+Replace "<name>" with the name of the tag, branch, or commit you want to
+install, e.g. "master" or "v0.2.0".  If you don't have a `pip3`, replace
+it with `python3 -m pip`.  For more information, see the [Pip
+documentation]( https://pip.pypa.io/).
 
 
 License
@@ -39,31 +63,9 @@ license.  See the `LICENSE` file for details.
 Concepts
 --------
 
-An event describes something that happens.  It has a symbol indicating
-the type of event, a time stamp indicating the start of the event, a
-duration, a value, and a sequence identifier.  The sequence identifier
-indicates what sequence of events (or timeline) the event belongs to.
-An event type normally corresponds to a particular variable or
-measurement of interest, such as rain.  (When did it start raining?  How
-long did it rain?  How much rain fell?)
-
-An event sequence is an ordered collection of events that all have the
-same sequence identifier.  An event sequence normally describes the
-timeline of a particular entity of interest, such as a person.  Events
-can happen at arbitrary times or be sampled with some pattern so
-sequences may be regular, or irregular, or something in between.
-
-A timeline is a type of event sequence where all of the events have
-"interpretable" times, that is, times that are analogous to the real
-numbers.  Integer times are fine as long as their differences are
-meaningful.  Thus a timeline is distinguished from sequences that have
-non-meaningful times, such as time steps or other sequential numbering,
-sequences that have only ordering and not difference.
-
-To avoid ambiguity, "sequence" will refer solely to an event sequence.
-Data structures will be referred to as iterables or collections or with
-specific names as appropriate.  A stream is just another name for
-iterable.
+See the [package documentation](
+https://github.com/afbarnard/esal/blob/master/esal/__init__.py) for a
+conceptual overview of events and sequences.
 
 
 Contact
@@ -78,5 +80,5 @@ request work flow.
 
 -----
 
-Copyright (c) 2015 Aubrey Barnard.  This is free software.  See LICENSE
+Copyright (c) 2018 Aubrey Barnard.  This is free software.  See LICENSE
 for details.

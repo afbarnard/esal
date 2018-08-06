@@ -49,7 +49,7 @@ class EventTest(unittest.TestCase):
         self.assertEqual(111, self.event.seq)
         self.assertEqual(3.3, self.event.time)
         self.assertEqual('c', self.event.typ)
-        self.assertIsNone(self.event.dura)
+        self.assertIsNone(self.event.end)
         self.assertIsNone(self.event.val)
 
     def test_access_field_by_index(self):
@@ -95,7 +95,7 @@ class EventTest(unittest.TestCase):
         self.assertEqual(hash(self.event), hash(event2))
 
     def test_repr(self):
-        rep = "Event(seq='pt12345', time='2015-04-28', dura=31, typ='mi', val=True)"
+        rep = "Event(seq='pt12345', time='2015-04-28', end=31, typ='mi', val=True)"
         self.assertEqual(rep, repr(self.event))
 
     def test_sort_key(self):
@@ -104,7 +104,7 @@ class EventTest(unittest.TestCase):
 
     def test_matches(self):
         self.assertTrue(self.event.matches(typ='mi'))
-        self.assertTrue(self.event.matches(dura=31, val=True))
+        self.assertTrue(self.event.matches(end=31, val=True))
         self.assertTrue(self.event.matches(*self.event_fields))
         self.assertFalse(self.event.matches(seq=3))
         self.assertFalse(self.event.matches(typ='a'))

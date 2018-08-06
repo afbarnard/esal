@@ -1,6 +1,6 @@
 # Generally useful functions
-#
-# Copyright (c) 2015 Aubrey Barnard.  This is free software.  See
+
+# Copyright (c) 2018 Aubrey Barnard.  This is free software.  See
 # LICENSE for details.
 
 import itertools as itools
@@ -161,3 +161,12 @@ class _Any(object):
         return cls._instance
 
 Any = _Any()
+
+
+def cmp(obj1, obj2):
+    if obj1 < obj2:
+        return -1
+    elif obj1 > obj2:
+        return 1
+    else:
+        return 0

@@ -77,7 +77,7 @@ class StoryTests(unittest.TestCase):
             for ev_num, ev_idx in enumerate(index_maps[seq_idx], 1):
                 ev = seq[ev_idx]
                 expected.append(events.Event(
-                        ev.seq, ev_num, ev.dura, ev.typ, ev.val))
+                        ev.seq, ev_num, ev.end, ev.typ, ev.val))
         actual = list(streams.map_sequences_as_events(
                 rev_evs_to_seqs, itools.chain.from_iterable(seqs)))
         self.assertEqual(expected, actual)

@@ -1,4 +1,4 @@
-# Copyright (c) 2015 Aubrey Barnard.  This is free software.  See
+# Copyright (c) 2018 Aubrey Barnard.  This is free software.  See
 # LICENSE for details.
 
 # Ignore file backups
@@ -8,3 +8,6 @@
 __pycache__
 *.pyc
 *.pyo
+
+# Ignore synchronization directory
+sync
