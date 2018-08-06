@@ -20,7 +20,8 @@ implemented features are:
 * Event sequence data structure for the efficient querying of event
   sequences
 * Interval objects
-* Allen's interval algebra
+* Allen's interval algebra (constant-time implementation that uses the
+  minimum number of comparisons)
 
 The planned features are:
 

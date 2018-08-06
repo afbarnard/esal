@@ -115,6 +115,35 @@ class Interval:
             hi_open=False,
             length=None,
     ):
+        """
+        Create an interval with the given bounds.  The bounds must be
+        orderable.
+
+        lo: Lower bound.
+        hi: Upper bound.  Omit to create a point.
+        lo_open: Whether the interval *excludes* the lower bound.
+        hi_open: Whether the interval *excludes* the upper bound.
+        length: Length of the interval.  Useful when the bounds do not
+            support subtraction.
+
+        A point interval is one where the bounds are equal and closed,
+        e.g. "x(8, 8)x".  An empty interval is one where the bounds are
+        equal and open, e.g. "o(8, 8)o".
+
+        If the bounds support subtraction, then the length of the
+        interval will be computed automatically.  Otherwise, you can
+        supply your own length.
+
+        Examples:
+
+        >>> Interval(8)  # point interval
+        >>> Interval(8, lo_open=True)  # empty interval
+        >>> Interval(0.0, float('inf'), hi_open=True)  # non-negative reals: x(0,∞)o
+        >>> Interval('a', 'b', length=1)
+        >>> 'b' in Interval('a', 'c')  # -> True
+        >>> Interval('b', 'c') in Interval('a', 'd')  # -> True
+        >>> Interval('b', 'c').allen_relation(Interval('a', 'd'))  # -> <AllenRelation.inside: 2>
+        """
         self._lo = lo
         self._hi = hi if hi is not None else lo
         self._lopen = lo_open

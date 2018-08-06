@@ -25,11 +25,12 @@ class Event:
 
     def __init__(self, type, when, value=None):
         """
-        Create an event with the given contents.
+        Create an event of the given type that occurs over the given time
+        span with the given value.
 
-        `type`: Event type.  Any hashable.
-        `when`: When the event occurred.  Any orderable.
-        `value`: Arbitrary value associated with the event.  Optional.
+        type: Event type.  Any hashable.
+        when: When the event occurred.  Any orderable.
+        value: Arbitrary value associated with the event.  Optional.
             If you want this `Event` to be hashable, then its value must
             also be hashable.
         """
@@ -70,6 +71,14 @@ class Event:
 class EventSequence:
 
     def __init__(self, events, facts=None, id_=None):
+        """
+        Create a sequence from the given events and facts.
+
+        events: Iterable of events.
+        facts: Iterable of (key, value) pairs, the atemporal
+            information about this sequence.
+        id_: Arbitrary sequence identifier.
+        """
         # Store ID and facts
         self._id = id_ if id_ is not None else id(self)
         self._facts = None
