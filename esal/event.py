@@ -12,6 +12,13 @@ from . import interval
 from . import sorted_search as sose
 
 
+# Export public API
+__all__ = (
+    'Event',
+    'EventSequence',
+)
+
+
 class Event:
 
     __slots__ = ('_type', '_when', '_val')
