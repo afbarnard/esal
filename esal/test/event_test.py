@@ -37,7 +37,7 @@ class EventSequenceTest(unittest.TestCase):
 
     def setUp(self):
         self.evs = EventSequenceTest.evs
-        self.es = EventSequence(0, self.evs)
+        self.es = EventSequence(self.evs)
 
     def test_has_type(self):
         types = set(e.type for e in self.evs)

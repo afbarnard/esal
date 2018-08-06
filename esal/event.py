@@ -69,8 +69,12 @@ class Event:
 
 class EventSequence:
 
-    def __init__(self, id, events):
-        self._id = id
+    def __init__(self, events, facts=None, id_=None):
+        # Store ID and facts
+        self._id = id_ if id_ is not None else id(self)
+        self._facts = None
+        if facts:
+            self._facts = dict(facts)
         # Store the events by ascending `when`
         evs = [(e.when, e) for e in events]
         evs.sort(key=lambda p: (p[0], p[1].type))
@@ -86,8 +90,8 @@ class EventSequence:
                            else object)
 
     def __repr__(self):
-        return 'EventSequence({!r}, {!r})'.format(
-            self._id, self._events)
+        return ('EventSequence(id_={!r}, facts={!r}, events={!r})'
+                .format(self._id, self._facts, self._events))
 
     @property
     def id(self):
@@ -102,10 +106,25 @@ class EventSequence:
     def __iter__(self):
         return iter(self._events)
 
+    def facts(self):
+        if self._facts is not None:
+            return self._facts.items()
+        else:
+            return ()
+
     events = __iter__
 
     def types(self):
         return self._types2evs.keys()
+
+    def has_fact(self, key):
+        return self._facts is not None and key in self._facts
+
+    def fact(self, key, default=None):
+        if self._facts is not None:
+            return self._facts.get(key, default)
+        else:
+            return default
 
     def n_events_of_type(self, type):
         return len(self._types2evs.get(type, ()))
@@ -218,7 +237,7 @@ class EventSequence:
             target=sose.Target.range)
         return self._events[lo:hi]
 
-    def pprint(self, margin=0, indent=2, file=sys.stdout):
+    def pprint(self, margin=0, indent=2, file=sys.stdout): # TODO format `when`s and `value`s
         margin_space = ' ' * margin
         indent_space = ' ' * indent
         file.write(margin_space)
@@ -228,6 +247,14 @@ class EventSequence:
         file.write('id: ')
         file.write(str(self.id))
         file.write('\n')
+        if self._facts:
+            for k in sorted(self._facts.keys()):
+                file.write(margin_space)
+                file.write(indent_space)
+                file.write(str(k))
+                file.write(': ')
+                file.write(str(self._facts[k]))
+                file.write('\n')
         for e in self.events():
             file.write(margin_space)
             file.write(indent_space)
