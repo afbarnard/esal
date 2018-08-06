@@ -47,7 +47,7 @@ Install
 
     pip3 install [--user] https://github.com/afbarnard/esal/archive/<name>.zip#egg=esal
 
-Replace "<name>" with the name of the tag, branch, or commit you want to
+Replace `<name>` with the name of the tag, branch, or commit you want to
 install, e.g. "master" or "v0.2.0".  If you don't have a `pip3`, replace
 it with `python3 -m pip`.  For more information, see the [Pip
 documentation]( https://pip.pypa.io/).
