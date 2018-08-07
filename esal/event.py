@@ -144,6 +144,18 @@ class EventSequence:
     def events_of_type(self, type):
         return (self._events[i] for i in self._types2evs.get(type, ()))
 
+    def events_between(self, when_lo, when_hi):
+        """
+        Return a tuple containing the events in the given interval
+        (inclusive).
+        """
+        # Find the events in the interval
+        _, (lo, hi) = sose.binary_search(
+            self._whens, when_lo, target_key_hi=when_hi,
+            target=sose.Target.range)
+        # Return the slice with the selected events
+        return self._events[lo:hi]
+
     def has_event(self, event):
         found, (lo, hi) = sose.binary_search(
             self._whens, event.when, target=sose.Target.range)
@@ -244,10 +256,18 @@ class EventSequence:
             return True
 
     def subsequence(self, when_lo, when_hi):
-        _, (lo, hi) = sose.binary_search(
-            self._whens, when_lo, target_key_hi=when_hi,
-            target=sose.Target.range)
-        return self._events[lo:hi]
+        """
+        Return a copy of this event sequence that contains only the events
+        in the given interval (inclusive).
+        """
+        # Create a new event sequence with events in the specified
+        # interval
+        es = EventSequence(
+            self.events_between(when_lo, when_hi), id_=self.id)
+        # Add facts by reference (rather than having the constructor
+        # create a new dict)
+        es._facts = self._facts
+        return es
 
     def pprint(self, margin=0, indent=2, file=sys.stdout): # TODO format `when`s and `value`s
         margin_space = ' ' * margin

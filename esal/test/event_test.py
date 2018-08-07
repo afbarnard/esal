@@ -201,7 +201,7 @@ class EventSequenceTest(unittest.TestCase):
             self.assertEqual(
                 exists, self.es.before(*seq, strict=False), seq)
 
-    def test_subsequence(self):
+    def test_events_between(self):
         ordered_evs = sorted(((e.when, e) for e in self.evs),
                              key=lambda x: (x[0], x[1].type))
         los_his = (
@@ -221,5 +221,5 @@ class EventSequenceTest(unittest.TestCase):
         for lo, hi in los_his:
             expected = tuple(
                 x[1] for x in ordered_evs if lo <= x[0] <= hi)
-            self.assertEqual(expected, self.es.subsequence(lo, hi))
-            self.assertEqual((), self.empty.subsequence(lo, hi))
+            self.assertEqual(expected, self.es.events_between(lo, hi))
+            self.assertEqual((), self.empty.events_between(lo, hi))
