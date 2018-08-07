@@ -88,7 +88,10 @@ class EventSequence:
         evs = [(e.when, e) for e in events]
         evs.sort(key=lambda p: (p[0], p[1].type))
         # Keep the `when`s to use as an index
-        self._whens, self._events = tuple(zip(*evs))
+        whens_events = tuple(zip(*evs))
+        self._whens, self._events = (whens_events
+                                     if whens_events
+                                     else ((), ()))
         # Build an index of event types to events
         types2evs = collections.defaultdict(list)
         for idx, event in enumerate(self._events):

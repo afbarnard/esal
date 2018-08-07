@@ -38,16 +38,19 @@ class EventSequenceTest(unittest.TestCase):
     def setUp(self):
         self.evs = EventSequenceTest.evs
         self.es = EventSequence(self.evs)
+        self.empty = EventSequence(())
 
     def test_has_type(self):
         types = set(e.type for e in self.evs)
         for t in string.ascii_lowercase:
             self.assertEqual(t in types, self.es.has_type(t), t)
+            self.assertFalse(self.empty.has_type(t), t)
 
     def test_has_when(self):
         whens = set(e.when for e in self.evs)
         for w in range(20):
             self.assertEqual(w in whens, self.es.has_when(w), w)
+            self.assertFalse(self.empty.has_when(w), w)
 
     def test_has_event(self):
         events = set(self.evs)
@@ -55,6 +58,7 @@ class EventSequenceTest(unittest.TestCase):
             for w in range(20):
                 e = Event(t, w)
                 self.assertEqual(e in events, self.es.has_event(e), e)
+                self.assertFalse(self.empty.has_event(e), e)
 
     def test___contains__(self):
         types = set(e.type for e in self.evs)
@@ -66,20 +70,26 @@ class EventSequenceTest(unittest.TestCase):
                 self.assertEqual(t in types, t in self.es, t)
                 self.assertEqual(w in whens, w in self.es, w)
                 self.assertEqual(e in events, e in self.es, e)
+                self.assertNotIn(t, self.empty)
+                self.assertNotIn(w, self.empty)
+                self.assertNotIn(e, self.empty)
 
     def test_events(self):
         self.evs = sorted(self.evs, key=lambda e: (e.when, e.type))
         self.assertSequenceEqual(self.evs, tuple(self.es.events()))
+        self.assertSequenceEqual((), tuple(self.empty.events()))
 
     def test_n_events_of_type(self):
         for t in string.ascii_lowercase:
             count = sum(1 for e in self.evs if e.type == t)
             self.assertEqual(count, self.es.n_events_of_type(t), t)
+            self.assertEqual(0, self.empty.n_events_of_type(t), t)
 
     def test_events_of_type(self):
         for t in string.ascii_lowercase:
             events = [e for e in self.evs if e.type == t]
             self.assertCountEqual(events, self.es.events_of_type(t), t)
+            self.assertCountEqual((), self.empty.events_of_type(t), t)
 
     def test_has_types(self):
         all_types = set(string.ascii_lowercase)
@@ -102,6 +112,7 @@ class EventSequenceTest(unittest.TestCase):
             else:
                 expected = (False, None)
             self.assertEqual(expected, self.es.first(t), t)
+            self.assertEqual((False, None), self.empty.first(t), t)
 
     def test_first_after(self):
         evs_by_when = [(e.when, e) for e in self.evs]
@@ -123,6 +134,10 @@ class EventSequenceTest(unittest.TestCase):
                         expected,
                         self.es.first(t, after=w, strict=strict),
                         (t, w, strict))
+                    self.assertEqual(
+                        (False, None),
+                        self.empty.first(t, after=w, strict=strict),
+                        (t, w, strict))
 
     def test_before_pairs(self):
         for t1 in string.ascii_lowercase:
@@ -138,6 +153,9 @@ class EventSequenceTest(unittest.TestCase):
                 lte = first_t1 <= last_t2 if t1s and t2s else False
                 self.assertEqual(
                     lte, self.es.before(t1, t2, strict=False), (t1, t2))
+                self.assertEqual(
+                    False, self.empty.before(t1, t2, strict=False),
+                    (t1, t2))
 
     def test_before_ascending(self):
         seqs = (
@@ -204,3 +222,4 @@ class EventSequenceTest(unittest.TestCase):
             expected = tuple(
                 x[1] for x in ordered_evs if lo <= x[0] <= hi)
             self.assertEqual(expected, self.es.subsequence(lo, hi))
+            self.assertEqual((), self.empty.subsequence(lo, hi))

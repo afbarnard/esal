@@ -58,7 +58,7 @@ released under the MIT license.  See `LICENSE` for details.
 
 
 # Version
-__version__ = '0.2.0'
+__version__ = '0.2.1'
 
 
 # Expose core API at the top level
