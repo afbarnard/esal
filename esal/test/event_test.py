@@ -217,9 +217,17 @@ class EventSequenceTest(unittest.TestCase):
             (10, 20),
             # After empty
             (20, 100),
+            # Unlimited before
+            (None, 5),
+            # Unlimited after
+            (5, None),
+            # Unlimited everywhere
+            (None, None),
         )
         for lo, hi in los_his:
             expected = tuple(
-                x[1] for x in ordered_evs if lo <= x[0] <= hi)
+                x[1] for x in ordered_evs
+                if (lo is None or lo <= x[0]) and
+                   (hi is None or x[0] <= hi))
             self.assertEqual(expected, self.es.events_between(lo, hi))
             self.assertEqual((), self.empty.events_between(lo, hi))

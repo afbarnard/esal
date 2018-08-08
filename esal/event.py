@@ -144,15 +144,30 @@ class EventSequence:
     def events_of_type(self, type):
         return (self._events[i] for i in self._types2evs.get(type, ()))
 
-    def events_between(self, when_lo, when_hi):
+    def events_between(self, when_lo=None, when_hi=None):
         """
         Return a tuple containing the events in the given interval
         (inclusive).
+
+        when_lo: Lower bound or unlimited if `None`.
+        when_hi: Upper bound or unlimited if `None`.
         """
         # Find the events in the interval
-        _, (lo, hi) = sose.binary_search(
-            self._whens, when_lo, target_key_hi=when_hi,
-            target=sose.Target.range)
+        if when_lo is not None and when_hi is not None:
+            _, (lo, hi) = sose.binary_search(
+                self._whens, when_lo, target_key_hi=when_hi,
+                target=sose.Target.range)
+        elif when_lo is not None:
+            _, lo = sose.binary_search(
+                self._whens, when_lo, target=sose.Target.lo)
+            hi = len(self)
+        elif when_hi is not None:
+            _, hi = sose.binary_search(
+                self._whens, when_hi, target=sose.Target.hi)
+            lo = 0
+        else:
+            lo = 0
+            hi = len(self)
         # Return the slice with the selected events
         return self._events[lo:hi]
 
@@ -255,10 +270,13 @@ class EventSequence:
                     return False
             return True
 
-    def subsequence(self, when_lo, when_hi):
+    def subsequence(self, when_lo=None, when_hi=None):
         """
         Return a copy of this event sequence that contains only the events
         in the given interval (inclusive).
+
+        when_lo: Lower bound or unlimited if `None`.
+        when_hi: Upper bound or unlimited if `None`.
         """
         # Create a new event sequence with events in the specified
         # interval
