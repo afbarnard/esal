@@ -81,9 +81,7 @@ class EventSequence:
         """
         # Store ID and facts
         self._id = id_ if id_ is not None else id(self)
-        self._facts = None
-        if facts:
-            self._facts = dict(facts)
+        self._facts = dict(facts) if facts else {}
         # Store the events by ascending `when`
         evs = [(e.when, e) for e in events]
         evs.sort(key=lambda p: (p[0], p[1].type))
@@ -113,7 +111,17 @@ class EventSequence:
         return len(self._events)
 
     def __getitem__(self, index):
-        return self._events[index]
+        if isinstance(index, int):
+            return self._events[index]
+        else:
+            return self._facts[index]
+
+    def __setitem__(self, key, val):
+        if isinstance(key, int):
+            raise Exception('Integers index events, but events are '
+                            'read-only, so integer indices are not '
+                            'allowed: {!r}'.format(key))
+        self._facts[key] = val
 
     def __iter__(self):
         return iter(self._events)
@@ -130,13 +138,10 @@ class EventSequence:
         return self._types2evs.keys()
 
     def has_fact(self, key):
-        return self._facts is not None and key in self._facts
+        return key in self._facts
 
     def fact(self, key, default=None):
-        if self._facts is not None:
-            return self._facts.get(key, default)
-        else:
-            return default
+        return self._facts.get(key, default)
 
     def n_events_of_type(self, type):
         return len(self._types2evs.get(type, ()))
@@ -279,13 +284,13 @@ class EventSequence:
         when_hi: Upper bound or unlimited if `None`.
         """
         # Create a new event sequence with events in the specified
-        # interval
-        es = EventSequence(
-            self.events_between(when_lo, when_hi), id_=self.id)
-        # Add facts by reference (rather than having the constructor
-        # create a new dict)
-        es._facts = self._facts
-        return es
+        # interval.  Make sure to copy facts because they can be
+        # modified.
+        return EventSequence(
+            self.events_between(when_lo, when_hi),
+            self._facts.items(),
+            self.id,
+        )
 
     def pprint(self, margin=0, indent=2, file=sys.stdout): # TODO format `when`s and `value`s
         margin_space = ' ' * margin
