@@ -132,7 +132,9 @@ class Interval:
 
         If the bounds support subtraction, then the length of the
         interval will be computed automatically.  Otherwise, you can
-        supply your own length.
+        supply your own length.  Similarly, an interval can be
+        constructed from `lo` and `length` if the two can be added
+        together to set `hi`.
 
         Examples:
 
@@ -145,15 +147,22 @@ class Interval:
         >>> Interval('b', 'c').allen_relation(Interval('a', 'd'))  # -> <AllenRelation.inside: 2>
         """
         self._lo = lo
-        self._hi = hi if hi is not None else lo
+        # Infer hi from length or treat as point interval
+        if hi is not None:
+            self._hi = hi
+        else:
+            if length is not None:
+                self._hi = lo + length
+            else:
+                self._hi = lo
         self._lopen = lo_open
         self._hopen = hi_open
         self._length = length
         # Make sure lo <= hi
         if self._lo > self._hi:
-            self._lo, self._hi = self._hi, self._lo
-            self._lopen, self._hopen = self._hopen, self._lopen
-        assert self._lo <= self._hi
+            raise ValueError(
+                'Bad interval bounds: (lo: {!r}) </= (hi: {!r})'
+                .format(self._lo, self._hi))
         # Make sure point / empty intervals are sensible
         if self._lo == self._hi:
             is_empty = self._lopen or self._hopen
@@ -161,7 +170,7 @@ class Interval:
             self._hopen = is_empty
             self._length = 0
         # Try to compute the length
-        elif length is None:
+        elif self._length is None:
             try:
                 self._length = self._hi - self._lo
             except TypeError:

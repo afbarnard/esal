@@ -142,9 +142,21 @@ class AllenAlgebraTest(unittest.TestCase):
 
 class IntervalTest(unittest.TestCase):
 
-    def test_construct_switch_lo_hi(self):
-        self.assertEqual(Interval(2, 1, True, False),
-                         Interval(1, 2, False, True))
+    def test_construct_bad_lo_hi(self):
+        with self.assertRaises(ValueError):
+            Interval(2, 1)
+
+    def test_construct_compute_length(self):
+        i = Interval(3, 8)
+        self.assertEqual(3, i.lo)
+        self.assertEqual(8, i.hi)
+        self.assertEqual(5, i.length())
+
+    def test_construct_from_lo_length(self):
+        i = Interval(3, length=5)
+        self.assertEqual(3, i.lo)
+        self.assertEqual(8, i.hi)
+        self.assertEqual(5, i.length())
 
     def test_is_point(self):
         i = Interval(3)
