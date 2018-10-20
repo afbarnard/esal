@@ -21,34 +21,34 @@ __all__ = (
 
 class Event:
 
-    __slots__ = ('_type', '_when', '_val')
+    __slots__ = ('_when', '_type', '_val')
 
-    def __init__(self, type, when, value=None):
+    def __init__(self, when, type, value=None):
         """
         Create an event of the given type that occurs over the given time
         span with the given value.
 
-        type: Event type.  Any hashable.
         when: When the event occurred.  Any orderable.
+        type: Event type.  Any hashable.
         value: Arbitrary value associated with the event.  Optional.
             If you want this `Event` to be hashable, then its value must
             also be hashable.
         """
-        self._type = type
         self._when = when
+        self._type = type
         self._val = value
 
     def __repr__(self):
         return 'Event({!r}, {!r}, {!r})'.format(
-            self.type, self.when, self.value)
-
-    @property
-    def type(self):
-        return self._type
+            self.when, self.type, self.value)
 
     @property
     def when(self):
         return self._when
+
+    @property
+    def type(self):
+        return self._type
 
     @property
     def value(self):

@@ -28,11 +28,11 @@ class EventSequenceTest(unittest.TestCase):
     # 16: q
     # 18: q
     evs = (
-        Event('y', 3), Event('e', 0), Event('z', 2), Event('t', 3),
-        Event('y', 5), Event('w', 5), Event('l', 14), Event('h', 9),
-        Event('k', 4), Event('e', 9), Event('v', 5), Event('s', 3),
-        Event('l', 6), Event('f', 13), Event('q', 18), Event('k', 11),
-        Event('b', 12), Event('l', 0), Event('d', 10), Event('q', 16),
+        Event(3, 'y'), Event(0, 'e'), Event(2, 'z'), Event(3, 't'),
+        Event(5, 'y'), Event(5, 'w'), Event(14, 'l'), Event(9, 'h'),
+        Event(4, 'k'), Event(9, 'e'), Event(5, 'v'), Event(3, 's'),
+        Event(6, 'l'), Event(13, 'f'), Event(18, 'q'), Event(11, 'k'),
+        Event(12, 'b'), Event(0, 'l'), Event(10, 'd'), Event(16, 'q'),
     )
 
     def setUp(self):
@@ -56,7 +56,7 @@ class EventSequenceTest(unittest.TestCase):
         events = set(self.evs)
         for t in string.ascii_lowercase:
             for w in range(20):
-                e = Event(t, w)
+                e = Event(w, t)
                 self.assertEqual(e in events, self.es.has_event(e), e)
                 self.assertFalse(self.empty.has_event(e), e)
 
@@ -66,7 +66,7 @@ class EventSequenceTest(unittest.TestCase):
         events = set(self.evs)
         for t in string.ascii_lowercase:
             for w in range(20):
-                e = Event(t, w)
+                e = Event(w, t)
                 self.assertEqual(t in types, t in self.es, t)
                 self.assertEqual(w in whens, w in self.es, w)
                 self.assertEqual(e in events, e in self.es, e)
