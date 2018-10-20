@@ -4,7 +4,7 @@
 # LICENSE for details.
 
 
-import collections
+import heapq
 import operator
 import sys
 
@@ -91,9 +91,13 @@ class EventSequence:
                                      if whens_events
                                      else ((), ()))
         # Build an index of event types to events
-        types2evs = collections.defaultdict(list)
+        types2evs = {}
         for idx, event in enumerate(self._events):
-            types2evs[event.type].append(idx)
+            typ = event.type
+            if typ in types2evs:
+                types2evs[typ].append(idx)
+            else:
+                types2evs[typ] = [idx]
         self._types2evs = types2evs
         self._when_type = (type(self._events[0].when)
                            if len(self._events) > 0
@@ -132,7 +136,13 @@ class EventSequence:
         else:
             return ()
 
-    events = __iter__
+    def events(self, *types):
+        if not types:
+            yield from self._events
+        else:
+            for event_index in heapq.merge(
+                    *(self._types2evs.get(t, ()) for t in types)):
+                yield self._events[event_index]
 
     def types(self):
         return self._types2evs.keys()
@@ -145,9 +155,6 @@ class EventSequence:
 
     def n_events_of_type(self, type):
         return len(self._types2evs.get(type, ()))
-
-    def events_of_type(self, type):
-        return (self._events[i] for i in self._types2evs.get(type, ()))
 
     def events_between(self, when_lo=None, when_hi=None):
         """
@@ -304,7 +311,7 @@ class EventSequence:
                 file.write(': ')
                 file.write(str(self._facts[k]))
                 file.write('\n')
-        for e in self.events():
+        for e in self._events:
             file.write(margin_space)
             file.write(indent_space)
             file.write(str(e.when))

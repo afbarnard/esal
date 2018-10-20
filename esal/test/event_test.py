@@ -74,22 +74,33 @@ class EventSequenceTest(unittest.TestCase):
                 self.assertNotIn(w, self.empty)
                 self.assertNotIn(e, self.empty)
 
+    def test___iter__(self):
+        evs = sorted(self.evs, key=lambda e: (e.when, e.type))
+        self.assertSequenceEqual(evs, list(self.es))
+        self.assertSequenceEqual((), tuple(self.empty))
+
     def test_events(self):
-        self.evs = sorted(self.evs, key=lambda e: (e.when, e.type))
-        self.assertSequenceEqual(self.evs, tuple(self.es.events()))
-        self.assertSequenceEqual((), tuple(self.empty.events()))
+        # All events (separate code path from `__iter__`)
+        evs = sorted(self.evs, key=lambda e: (e.when, e.type))
+        self.assertSequenceEqual(evs, list(self.es.events()))
+        self.assertSequenceEqual((), list(self.empty.events()))
+        # Events by each type individually
+        for t in string.ascii_lowercase:
+            events = [e for e in evs if e.type == t]
+            self.assertSequenceEqual(
+                events, list(self.es.events(t)), t)
+            self.assertSequenceEqual(
+                (), list(self.empty.events(t)), t)
+        # Events by several types at once
+        idxs = [0, 1, 5, 9, 10, 11, 12, 13, 17, 18, 19]
+        self.assertSequenceEqual([self.es[i] for i in idxs],
+                                 list(self.es.events(*'alhyqed')))
 
     def test_n_events_of_type(self):
         for t in string.ascii_lowercase:
             count = sum(1 for e in self.evs if e.type == t)
             self.assertEqual(count, self.es.n_events_of_type(t), t)
             self.assertEqual(0, self.empty.n_events_of_type(t), t)
-
-    def test_events_of_type(self):
-        for t in string.ascii_lowercase:
-            events = [e for e in self.evs if e.type == t]
-            self.assertCountEqual(events, self.es.events_of_type(t), t)
-            self.assertCountEqual((), self.empty.events_of_type(t), t)
 
     def test_has_types(self):
         all_types = set(string.ascii_lowercase)
