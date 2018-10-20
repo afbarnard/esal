@@ -283,14 +283,8 @@ class EventSequence:
         when_lo: Lower bound or unlimited if `None`.
         when_hi: Upper bound or unlimited if `None`.
         """
-        # Create a new event sequence with events in the specified
-        # interval.  Make sure to copy facts because they can be
-        # modified.
-        return EventSequence(
-            self.events_between(when_lo, when_hi),
-            self._facts.items(),
-            self.id,
-        )
+        return self.copy(
+            events=self.events_between(when_lo, when_hi))
 
     def pprint(self, margin=0, indent=2, file=sys.stdout): # TODO format `when`s and `value`s
         margin_space = ' ' * margin
@@ -322,3 +316,14 @@ class EventSequence:
             file.write('\n')
         file.write(margin_space)
         file.write(')\n')
+
+    def copy(self, events=None, facts=None, id_=None):
+        """
+        Copy this event sequence, replacing existing fields with the given
+        values.
+        """
+        return EventSequence(
+            events=events if events is not None else self.events(),
+            facts=facts if facts is not None else self.facts(),
+            id_=id_ if id_ is not None else self.id,
+        )
