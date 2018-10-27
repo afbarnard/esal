@@ -9,10 +9,12 @@ import string
 import unittest
 
 from ..event import Event, EventSequence
+from ..interval import Interval
 
 
 class EventSequenceTest(unittest.TestCase):
 
+    # Point events
     #  0: e, l
     #  2: z
     #  3: s, t, y
@@ -35,8 +37,33 @@ class EventSequenceTest(unittest.TestCase):
         Event(12, 'b'), Event(0, 'l'), Event(10, 'd'), Event(16, 'q'),
     )
 
+    # Interval events.  Try to test all interval relationships.
+    #    a b c d e
+    # 0: +       +
+    # 1: |       |
+    # 2: |   +   |
+    # 3: - + |   -
+    # 4:   | - *
+    # 5:   | + * +
+    # 6: + - |   -
+    # 7: |   |
+    # 8: |   -
+    # 9: -
+    ievs = (
+        Event(Interval(2, 4), 'c'),
+        Event(Interval(0, 3), 'a'),
+        Event(Interval(5), 'd'),
+        Event(Interval(6, 9), 'a'),
+        Event(Interval(4), 'd'),
+        Event(Interval(5, 8), 'c'),
+        Event(Interval(5, 6), 'e'),
+        Event(Interval(3, 6), 'b'),
+        Event(Interval(0, 3), 'e'),
+    )
+
     def setUp(self):
         self.evs = EventSequenceTest.evs
+        self.ievs = EventSequenceTest.ievs
         self.es = EventSequence(self.evs)
         self.empty = EventSequence(())
 
@@ -242,3 +269,135 @@ class EventSequenceTest(unittest.TestCase):
                    (hi is None or x[0] <= hi))
             self.assertEqual(expected, self.es.events_between(lo, hi))
             self.assertEqual((), self.empty.events_between(lo, hi))
+
+    def test_transitions_empty(self):
+        self.assertEqual((), tuple(self.empty.transitions()))
+        self.assertEqual((), tuple(self.empty.transitions(*'led')))
+
+    def test_transitions_point_events(self):
+        es = EventSequence(e for e in self.evs if e.type in 'etsy')
+        # All events
+        expected = [
+            (0, {
+                0: {Event(0, 'e')},
+                1: {Event(0, 'e')},
+            }),
+            (3, {
+                0: {Event(3, 's'), Event(3, 't'), Event(3, 'y')},
+                1: {Event(3, 's'), Event(3, 't'), Event(3, 'y')},
+            }),
+            (5, {
+                0: {Event(5, 'y')},
+                1: {Event(5, 'y')},
+            }),
+            (9, {
+                0: {Event(9, 'e')},
+                1: {Event(9, 'e')},
+            }),
+        ]
+        self.assertSequenceEqual(
+            expected, list(es.transitions()))
+        # Selected events: s, t
+        expected = [
+            (3, {
+                0: {Event(3, 's'), Event(3, 't')},
+                1: {Event(3, 's'), Event(3, 't')},
+            }),
+        ]
+        self.assertSequenceEqual(
+            expected, list(es.transitions(*'st')))
+
+    def test_transitions_intervals(self):
+        es = EventSequence(self.ievs)
+        # All events (a, b, c, d, e)
+        expected = [
+            (0, {
+                1: {
+                    Event(Interval(0, 3), 'a'),
+                    Event(Interval(0, 3), 'e'),
+                },
+            }),
+            (2, {
+                1: {
+                    Event(Interval(2, 4), 'c'),
+                },
+            }),
+            (3, {
+                0: {
+                    Event(Interval(0, 3), 'a'),
+                    Event(Interval(0, 3), 'e'),
+                },
+                1: {
+                    Event(Interval(3, 6), 'b'),
+                },
+            }),
+            (4, {
+                0: {
+                    Event(Interval(2, 4), 'c'),
+                    Event(Interval(4), 'd'),
+                },
+                1: {
+                    Event(Interval(4), 'd'),
+                },
+            }),
+            (5, {
+                0: {
+                    Event(Interval(5), 'd'),
+                },
+                1: {
+                    Event(Interval(5, 8), 'c'),
+                    Event(Interval(5), 'd'),
+                    Event(Interval(5, 6), 'e'),
+                },
+            }),
+            (6, {
+                0: {
+                    Event(Interval(3, 6), 'b'),
+                    Event(Interval(5, 6), 'e'),
+                },
+                1: {
+                    Event(Interval(6, 9), 'a'),
+                },
+            }),
+            (8, {
+                0: {
+                    Event(Interval(5, 8), 'c'),
+                },
+            }),
+            (9, {
+                0: {
+                    Event(Interval(6, 9), 'a'),
+                },
+            }),
+        ]
+        self.assertSequenceEqual(
+            expected, list(es.transitions()))
+        # Selected events: b, e
+        expected = [
+            (0, {
+                1: {
+                    Event(Interval(0, 3), 'e'),
+                },
+            }),
+            (3, {
+                0: {
+                    Event(Interval(0, 3), 'e'),
+                },
+                1: {
+                    Event(Interval(3, 6), 'b'),
+                },
+            }),
+            (5, {
+                1: {
+                    Event(Interval(5, 6), 'e'),
+                },
+            }),
+            (6, {
+                0: {
+                    Event(Interval(3, 6), 'b'),
+                    Event(Interval(5, 6), 'e'),
+                },
+            }),
+        ]
+        self.assertSequenceEqual(
+            expected, list(es.transitions(*'be')))

@@ -5,6 +5,7 @@
 
 
 import heapq
+import itertools as itools
 import operator
 import sys
 
@@ -143,6 +144,40 @@ class EventSequence:
             for event_index in heapq.merge(
                     *(self._types2evs.get(t, ()) for t in types)):
                 yield self._events[event_index]
+
+    def transitions(self, *types):
+        def gen_txs(event_idxs):
+            for idx in event_idxs:
+                ev = self._events[idx]
+                # Interpret each event as an interval
+                if isinstance(ev.when, interval.Interval):
+                    lo = ev.when.lo
+                    hi = ev.when.hi
+                else:
+                    lo = ev.when
+                    hi = ev.when
+                yield (lo, 1, ev)
+                yield (hi, 0, ev)
+        def txs_sort_key(t):
+            return (t[0], -t[1])
+        def txs_grp_key(t):
+            return t[0]
+        if not types:
+            types = self._types2evs.keys()
+        # Generate the transitions for the events of each type
+        txs = []
+        for typ in types:
+            txs.append(sorted(gen_txs(self._types2evs.get(typ, ())),
+                              key=txs_sort_key))
+        for when, txs_evs in itools.groupby(
+                heapq.merge(*txs, key=txs_sort_key), key=txs_grp_key):
+            txs = {}
+            for _, tx, ev in txs_evs:
+                if tx in txs:
+                    txs[tx].add(ev)
+                else:
+                    txs[tx] = {ev}
+            yield (when, txs)
 
     def types(self):
         return self._types2evs.keys()
