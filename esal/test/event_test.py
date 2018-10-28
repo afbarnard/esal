@@ -8,7 +8,7 @@ import operator
 import string
 import unittest
 
-from ..event import Event, EventSequence
+from ..event import Event, EventSequence, mk_union_aggregator
 from ..interval import Interval
 
 
@@ -401,3 +401,85 @@ class EventSequenceTest(unittest.TestCase):
         ]
         self.assertSequenceEqual(
             expected, list(es.transitions(*'be')))
+
+    def test_aggregate_events(self):
+        # All events
+        def accumulator(evs, ev):
+            evs.append(ev)
+            return evs
+        for es in (self.empty, self.es):
+            self.assertSequenceEqual(
+                list(es.events()),
+                list(es.aggregate_events(accumulator).events()))
+            self.assertSequenceEqual(
+                list(es.events()),
+                list(es.aggregate_events(accumulator, 'flaq').events()))
+        # First events
+        def first(evs, ev):
+            if not evs:
+                return [ev]
+            else:
+                return evs
+        type2ev = {}
+        for ev in self.evs:
+            if ev.type in type2ev:
+                if ev.when < type2ev[ev.type].when:
+                    type2ev[ev.type] = ev
+            else:
+                type2ev[ev.type] = ev
+        es = EventSequence(type2ev.values())
+        self.assertSequenceEqual(
+            list(es.events()),
+            list(self.es.aggregate_events(first).events()))
+        # Selected first events
+        evs = [v for (k, v) in type2ev.items() if k in 'zesty']
+        evs.extend(e for e in self.evs if e.type not in 'zesty')
+        es = EventSequence(evs)
+        self.assertSequenceEqual(
+            list(es.events()),
+            list(self.es.aggregate_events(first, 'zesty').events()))
+
+    def test_union_aggregator(self):
+        ua = mk_union_aggregator()
+        self.assertEqual([Event(Interval(3), 't', ['a'])],
+                         ua([], Event(3, 't', 'a')))
+        self.assertEqual([Event(Interval(3), 't', ['a', 'b'])],
+                         ua([Event(Interval(3), 't', ['a'])],
+                            Event(3, 'z', 'b')))
+        ua = mk_union_aggregator(5, 5)
+        self.assertEqual([Event(Interval(3, 8), 't', ['a'])],
+                         ua([], Event(3, 't', 'a')))
+        self.assertEqual([Event(Interval(3, 18), 't', ['a', 'b'])],
+                         ua([Event(Interval(3, 8), 't', ['a'])],
+                            Event(13, 'z', 'b')))
+        self.assertEqual([Event(Interval(3, 8), 't', ['a']),
+                          Event(Interval(14, 19), 'z', ['b'])],
+                         ua([Event(Interval(3, 8), 't', ['a'])],
+                            Event(14, 'z', 'b')))
+
+    def test_union_aggregator_on_event_sequence(self):
+        ua = mk_union_aggregator(max_gap=2)
+        es1 = EventSequence((
+            Event(Interval(0, 3), 'a', [None]),
+            Event(Interval(6, 9), 'a', [None]),
+            Event(Interval(3, 6), 'b', [None]),
+            Event(Interval(2, 8), 'c', [None, None]),
+            Event(Interval(4, 5), 'd', [None, None]),
+            Event(Interval(0, 6), 'e', [None, None]),
+        ))
+        es2 = EventSequence(self.ievs)
+        self.assertSequenceEqual(
+            list(es1.events()),
+            list(es2.aggregate_events(ua).events()))
+        ua = mk_union_aggregator(min_len=5)
+        es1 = EventSequence((
+            Event(Interval(0, 5), 'a', [None]),
+            Event(Interval(6, 11), 'a', [None]),
+            Event(Interval(3, 8), 'b', [None]),
+            Event(Interval(2, 10), 'c', [None, None]),
+            Event(Interval(4, 10), 'd', [None, None]),
+            Event(Interval(0, 10), 'e', [None, None]),
+        ))
+        self.assertSequenceEqual(
+            list(es1.events()),
+            list(es2.aggregate_events(ua).events()))

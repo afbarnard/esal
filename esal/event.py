@@ -17,6 +17,7 @@ from . import sorted_search as sose
 __all__ = (
     'Event',
     'EventSequence',
+    'mk_union_aggregator',
 )
 
 
@@ -369,3 +370,65 @@ class EventSequence:
             facts=facts if facts is not None else self.facts(),
             id_=id_ if id_ is not None else self.id,
         )
+
+    def aggregate_events(self, aggregator, types=None):
+        """
+        Apply the given aggregator separately to the events of each given
+        type.  Return a new event sequence containing the aggregated
+        events plus all the untouched, pre-existing information.
+
+        aggregator: Function that takes a list, the current aggregation,
+            and the current event, and that returns a list, the updated
+            aggregation.
+        types: Types of events to separately aggregate.  (Events of
+            other types are left alone.)
+        """
+        if types is None:
+            types = self._types2evs.keys()
+        events = []
+        for type in types:
+            aggregated = []
+            for ev_idx in self._types2evs.get(type, ()):
+                aggregated = aggregator(
+                    aggregated, self._events[ev_idx])
+            events.extend(aggregated)
+        for type in self._types2evs.keys() - types:
+            events.extend(self._events[i] for i in self._types2evs[type])
+        return self.copy(events=events)
+
+
+def mk_union_aggregator(min_len=0, max_gap=0):
+    """
+    Make and return a function that aggregates events by unioning their
+    intervals.
+
+    Accumulates the values of aggregated events into a list.  Uses the
+    event type of the first event in a group of aggregated events.
+
+    min_len: Minimum length of an interval.  Useful for giving length to
+        point events.
+    max_gap: Maximum length between intervals to be unioned.
+    """
+    def ensure_length(event, length):
+        when = event.when
+        if isinstance(when, interval.Interval):
+            if when.length() < length:
+                when = interval.Interval(when.lo, length=length)
+        else:
+            when = interval.Interval(when, length=length)
+        return Event(when, event.type, [event.value])
+    def union_aggregator(events, event):
+        this_event = ensure_length(event, min_len)
+        if len(events) == 0:
+            events.append(this_event)
+            return events
+        last_event = events[-1]
+        if this_event.when.lo - last_event.when.hi <= max_gap:
+            last_event.value.append(this_event.value[0])
+            when = interval.Interval(
+                last_event.when.lo, this_event.when.hi)
+            events[-1] = Event(when, last_event.type, last_event.value)
+        else:
+            events.append(this_event)
+        return events
+    return union_aggregator
