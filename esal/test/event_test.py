@@ -35,6 +35,7 @@ class EventSequenceTest(unittest.TestCase):
         Event(4, 'k'), Event(9, 'e'), Event(5, 'v'), Event(3, 's'),
         Event(6, 'l'), Event(13, 'f'), Event(18, 'q'), Event(11, 'k'),
         Event(12, 'b'), Event(0, 'l'), Event(10, 'd'), Event(16, 'q'),
+        Event(12, 'b'), Event(2, 'z'),
     )
 
     # Interval events.  Try to test all interval relationships.
@@ -54,6 +55,7 @@ class EventSequenceTest(unittest.TestCase):
         Event(Interval(0, 3), 'a'),
         Event(Interval(5), 'd'),
         Event(Interval(6, 9), 'a'),
+        Event(Interval(3, 6), 'b'),
         Event(Interval(4), 'd'),
         Event(Interval(5, 8), 'c'),
         Event(Interval(5, 6), 'e'),
@@ -119,9 +121,9 @@ class EventSequenceTest(unittest.TestCase):
             self.assertSequenceEqual(
                 (), list(self.empty.events(t)), t)
         # Events by several types at once
-        idxs = [0, 1, 5, 9, 10, 11, 12, 13, 17, 18, 19]
-        self.assertSequenceEqual([self.es[i] for i in idxs],
-                                 list(self.es.events(*'alhyqed')))
+        self.assertSequenceEqual(
+            [e for e in evs if e.type in 'alhyqed'],
+            list(self.es.events(*'alhyqed')))
 
     def test_n_events_of_type(self):
         for t in string.ascii_lowercase:
@@ -275,34 +277,29 @@ class EventSequenceTest(unittest.TestCase):
         self.assertEqual((), tuple(self.empty.transitions(*'led')))
 
     def test_transitions_point_events(self):
-        es = EventSequence(e for e in self.evs if e.type in 'etsy')
+        es = EventSequence(e for e in self.evs if e.type in 'betsy')
         # All events
         expected = [
-            (0, {
-                0: {Event(0, 'e')},
-                1: {Event(0, 'e')},
-            }),
-            (3, {
-                0: {Event(3, 's'), Event(3, 't'), Event(3, 'y')},
-                1: {Event(3, 's'), Event(3, 't'), Event(3, 'y')},
-            }),
-            (5, {
-                0: {Event(5, 'y')},
-                1: {Event(5, 'y')},
-            }),
-            (9, {
-                0: {Event(9, 'e')},
-                1: {Event(9, 'e')},
-            }),
+            (0, [Event(0, 'e')], [Event(0, 'e')]),
+            (3,
+             [Event(3, 's'), Event(3, 't'), Event(3, 'y')],
+             [Event(3, 's'), Event(3, 't'), Event(3, 'y')],
+            ),
+            (5, [Event(5, 'y')], [Event(5, 'y')]),
+            (9, [Event(9, 'e')], [Event(9, 'e')]),
+            (12,
+             [Event(12, 'b'), Event(12, 'b')],
+             [Event(12, 'b'), Event(12, 'b')],
+            ),
         ]
         self.assertSequenceEqual(
             expected, list(es.transitions()))
         # Selected events: s, t
         expected = [
-            (3, {
-                0: {Event(3, 's'), Event(3, 't')},
-                1: {Event(3, 's'), Event(3, 't')},
-            }),
+            (3,
+             [Event(3, 's'), Event(3, 't')],
+             [Event(3, 's'), Event(3, 't')],
+            ),
         ]
         self.assertSequenceEqual(
             expected, list(es.transitions(*'st')))
@@ -311,93 +308,56 @@ class EventSequenceTest(unittest.TestCase):
         es = EventSequence(self.ievs)
         # All events (a, b, c, d, e)
         expected = [
-            (0, {
-                1: {
-                    Event(Interval(0, 3), 'a'),
-                    Event(Interval(0, 3), 'e'),
-                },
-            }),
-            (2, {
-                1: {
-                    Event(Interval(2, 4), 'c'),
-                },
-            }),
-            (3, {
-                0: {
-                    Event(Interval(0, 3), 'a'),
-                    Event(Interval(0, 3), 'e'),
-                },
-                1: {
-                    Event(Interval(3, 6), 'b'),
-                },
-            }),
-            (4, {
-                0: {
-                    Event(Interval(2, 4), 'c'),
-                    Event(Interval(4), 'd'),
-                },
-                1: {
-                    Event(Interval(4), 'd'),
-                },
-            }),
-            (5, {
-                0: {
-                    Event(Interval(5), 'd'),
-                },
-                1: {
-                    Event(Interval(5, 8), 'c'),
-                    Event(Interval(5), 'd'),
-                    Event(Interval(5, 6), 'e'),
-                },
-            }),
-            (6, {
-                0: {
-                    Event(Interval(3, 6), 'b'),
-                    Event(Interval(5, 6), 'e'),
-                },
-                1: {
-                    Event(Interval(6, 9), 'a'),
-                },
-            }),
-            (8, {
-                0: {
-                    Event(Interval(5, 8), 'c'),
-                },
-            }),
-            (9, {
-                0: {
-                    Event(Interval(6, 9), 'a'),
-                },
-            }),
+            (0,
+             [Event(Interval(0, 3), 'a'), Event(Interval(0, 3), 'e')],
+             [],
+            ),
+            (2, [Event(Interval(2, 4), 'c')], []),
+            (3,
+             [Event(Interval(3, 6), 'b'), Event(Interval(3, 6), 'b')],
+             [Event(Interval(0, 3), 'a'), Event(Interval(0, 3), 'e')],
+            ),
+            (4,
+             [Event(Interval(4), 'd'),],
+             [Event(Interval(2, 4), 'c'), Event(Interval(4), 'd'),],
+            ),
+            (5,
+             [
+                 Event(Interval(5, 8), 'c'),
+                 Event(Interval(5), 'd'),
+                 Event(Interval(5, 6), 'e'),
+             ],
+             [Event(Interval(5), 'd')],
+            ),
+            (6,
+             [Event(Interval(6, 9), 'a'),],
+             [
+                 Event(Interval(3, 6), 'b'),
+                 Event(Interval(3, 6), 'b'),
+                 Event(Interval(5, 6), 'e'),
+             ],
+            ),
+            (8, [], [Event(Interval(5, 8), 'c')]),
+            (9, [], [Event(Interval(6, 9), 'a')]),
         ]
         self.assertSequenceEqual(
             expected, list(es.transitions()))
         # Selected events: b, e
         expected = [
-            (0, {
-                1: {
-                    Event(Interval(0, 3), 'e'),
-                },
-            }),
-            (3, {
-                0: {
-                    Event(Interval(0, 3), 'e'),
-                },
-                1: {
-                    Event(Interval(3, 6), 'b'),
-                },
-            }),
-            (5, {
-                1: {
-                    Event(Interval(5, 6), 'e'),
-                },
-            }),
-            (6, {
-                0: {
-                    Event(Interval(3, 6), 'b'),
-                    Event(Interval(5, 6), 'e'),
-                },
-            }),
+            (0, [Event(Interval(0, 3), 'e')], []),
+            (3,
+             [Event(Interval(3, 6), 'b'), Event(Interval(3, 6), 'b')],
+             [Event(Interval(0, 3), 'e')],
+            ),
+            (5, [Event(Interval(5, 6), 'e')], []),
+            (6,
+             [],
+             [
+                 Event(Interval(3, 6), 'b'),
+                 Event(Interval(3, 6), 'b'),
+                 Event(Interval(5, 6), 'e'),
+             ],
+            ),
         ]
         self.assertSequenceEqual(
             expected, list(es.transitions(*'be')))
@@ -462,7 +422,7 @@ class EventSequenceTest(unittest.TestCase):
         es1 = EventSequence((
             Event(Interval(0, 3), 'a', [None]),
             Event(Interval(6, 9), 'a', [None]),
-            Event(Interval(3, 6), 'b', [None]),
+            Event(Interval(3, 6), 'b', [None, None]),
             Event(Interval(2, 8), 'c', [None, None]),
             Event(Interval(4, 5), 'd', [None, None]),
             Event(Interval(0, 6), 'e', [None, None]),
@@ -475,7 +435,7 @@ class EventSequenceTest(unittest.TestCase):
         es1 = EventSequence((
             Event(Interval(0, 5), 'a', [None]),
             Event(Interval(6, 11), 'a', [None]),
-            Event(Interval(3, 8), 'b', [None]),
+            Event(Interval(3, 8), 'b', [None, None]),
             Event(Interval(2, 10), 'c', [None, None]),
             Event(Interval(4, 10), 'd', [None, None]),
             Event(Interval(0, 10), 'e', [None, None]),

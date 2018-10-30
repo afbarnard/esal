@@ -139,6 +139,11 @@ class EventSequence:
             return ()
 
     def events(self, *types):
+        """
+        Yield events of the specified types (or all events).
+
+        types: Types of events to yield.  Defaults to all event types.
+        """
         if not types:
             yield from self._events
         else:
@@ -146,7 +151,26 @@ class EventSequence:
                     *(self._types2evs.get(t, ()) for t in types)):
                 yield self._events[event_index]
 
+    n_events = __len__
+
     def transitions(self, *types):
+        """
+        Yield transitions of the specified types of events (or all
+        transitions).
+
+        A transition occurs when an event starts or stops.  Each
+        transition is described by a tuple (when, starts, stops).  Point
+        events are treated as both starting and stopping at the same
+        time.
+
+        Note that you can treat the event time as inclusive (closed) or
+        exclusive (open) by whether you consider the starts or stops to
+        have happened first.  In either case, point events will need
+        special handling.
+
+        types: Types of events of transitions to yield.  Defaults to all
+            event types.
+        """
         def gen_txs(event_idxs):
             for idx in event_idxs:
                 ev = self._events[idx]
@@ -164,7 +188,7 @@ class EventSequence:
         def txs_grp_key(t):
             return t[0]
         if not types:
-            types = self._types2evs.keys()
+            types = sorted(self._types2evs.keys())
         # Generate the transitions for the events of each type
         txs = []
         for typ in types:
@@ -172,16 +196,20 @@ class EventSequence:
                               key=txs_sort_key))
         for when, txs_evs in itools.groupby(
                 heapq.merge(*txs, key=txs_sort_key), key=txs_grp_key):
-            txs = {}
+            starts = []
+            stops = []
             for _, tx, ev in txs_evs:
-                if tx in txs:
-                    txs[tx].add(ev)
+                if tx == 0:
+                    stops.append(ev)
                 else:
-                    txs[tx] = {ev}
-            yield (when, txs)
+                    starts.append(ev)
+            yield (when, starts, stops)
 
     def types(self):
         return self._types2evs.keys()
+
+    def n_types(self):
+        return len(self._types2evs)
 
     def has_fact(self, key):
         return key in self._facts
