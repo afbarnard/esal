@@ -168,7 +168,8 @@ class Interval:
             is_empty = self._lopen or self._hopen
             self._lopen = is_empty
             self._hopen = is_empty
-            self._length = 0
+            if length is None:
+                self._length = 0
         # Try to compute the length
         elif self._length is None:
             try:

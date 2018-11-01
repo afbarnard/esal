@@ -3,6 +3,7 @@
 # Copyright (c) 2018 Aubrey Barnard.  This is free software.  See
 # LICENSE for details.
 
+import datetime
 import unittest
 
 from ..interval import AllenRelation, Interval, CompoundInterval
@@ -157,6 +158,13 @@ class IntervalTest(unittest.TestCase):
         self.assertEqual(3, i.lo)
         self.assertEqual(8, i.hi)
         self.assertEqual(5, i.length())
+
+    def test_construct_from_lo_length_typed_zero(self):
+        i = Interval(datetime.date(2018, 10, 31),
+                     length=datetime.timedelta(0))
+        self.assertEqual(datetime.date(2018, 10, 31), i.lo)
+        self.assertEqual(datetime.date(2018, 10, 31), i.hi)
+        self.assertEqual(datetime.timedelta(0), i.length())
 
     def test_is_point(self):
         i = Interval(3)
