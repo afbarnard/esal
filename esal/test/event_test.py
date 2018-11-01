@@ -280,26 +280,19 @@ class EventSequenceTest(unittest.TestCase):
         es = EventSequence(e for e in self.evs if e.type in 'betsy')
         # All events
         expected = [
-            (0, [Event(0, 'e')], [Event(0, 'e')]),
-            (3,
-             [Event(3, 's'), Event(3, 't'), Event(3, 'y')],
+            (0, [], [], [Event(0, 'e')]),
+            (3, [], [],
              [Event(3, 's'), Event(3, 't'), Event(3, 'y')],
             ),
-            (5, [Event(5, 'y')], [Event(5, 'y')]),
-            (9, [Event(9, 'e')], [Event(9, 'e')]),
-            (12,
-             [Event(12, 'b'), Event(12, 'b')],
-             [Event(12, 'b'), Event(12, 'b')],
-            ),
+            (5, [], [], [Event(5, 'y')]),
+            (9, [], [], [Event(9, 'e')]),
+            (12, [], [], [Event(12, 'b'), Event(12, 'b')]),
         ]
         self.assertSequenceEqual(
             expected, list(es.transitions()))
         # Selected events: s, t
         expected = [
-            (3,
-             [Event(3, 's'), Event(3, 't')],
-             [Event(3, 's'), Event(3, 't')],
-            ),
+            (3, [], [], [Event(3, 's'), Event(3, 't')]),
         ]
         self.assertSequenceEqual(
             expected, list(es.transitions(*'st')))
@@ -311,22 +304,25 @@ class EventSequenceTest(unittest.TestCase):
             (0,
              [Event(Interval(0, 3), 'a'), Event(Interval(0, 3), 'e')],
              [],
+             [],
             ),
-            (2, [Event(Interval(2, 4), 'c')], []),
+            (2, [Event(Interval(2, 4), 'c')], [], []),
             (3,
              [Event(Interval(3, 6), 'b'), Event(Interval(3, 6), 'b')],
              [Event(Interval(0, 3), 'a'), Event(Interval(0, 3), 'e')],
+             [],
             ),
             (4,
+             [],
+             [Event(Interval(2, 4), 'c')],
              [Event(Interval(4), 'd'),],
-             [Event(Interval(2, 4), 'c'), Event(Interval(4), 'd'),],
             ),
             (5,
              [
                  Event(Interval(5, 8), 'c'),
-                 Event(Interval(5), 'd'),
                  Event(Interval(5, 6), 'e'),
              ],
+             [],
              [Event(Interval(5), 'd')],
             ),
             (6,
@@ -336,20 +332,22 @@ class EventSequenceTest(unittest.TestCase):
                  Event(Interval(3, 6), 'b'),
                  Event(Interval(5, 6), 'e'),
              ],
+             [],
             ),
-            (8, [], [Event(Interval(5, 8), 'c')]),
-            (9, [], [Event(Interval(6, 9), 'a')]),
+            (8, [], [Event(Interval(5, 8), 'c')], []),
+            (9, [], [Event(Interval(6, 9), 'a')], []),
         ]
         self.assertSequenceEqual(
             expected, list(es.transitions()))
         # Selected events: b, e
         expected = [
-            (0, [Event(Interval(0, 3), 'e')], []),
+            (0, [Event(Interval(0, 3), 'e')], [], []),
             (3,
              [Event(Interval(3, 6), 'b'), Event(Interval(3, 6), 'b')],
              [Event(Interval(0, 3), 'e')],
+             [],
             ),
-            (5, [Event(Interval(5, 6), 'e')], []),
+            (5, [Event(Interval(5, 6), 'e')], [], []),
             (6,
              [],
              [
@@ -357,6 +355,7 @@ class EventSequenceTest(unittest.TestCase):
                  Event(Interval(3, 6), 'b'),
                  Event(Interval(5, 6), 'e'),
              ],
+             [],
             ),
         ]
         self.assertSequenceEqual(

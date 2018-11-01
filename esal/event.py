@@ -158,15 +158,23 @@ class EventSequence:
         Yield transitions of the specified types of events (or all
         transitions).
 
-        A transition occurs when an event starts or stops.  Each
-        transition is described by a tuple (when, starts, stops).  Point
-        events are treated as both starting and stopping at the same
-        time.
+        A transition occurs when an interval event starts or stops or
+        when a point event occurs.  All the transitions that occur at
+        the same time are yielded at once as a tuple (when, starts,
+        stops, points).  Grouping by time allows one to decide what
+        happens first according to application needs.  The following
+        diagrams illustrate some possibilities.
 
-        Note that you can treat the event time as inclusive (closed) or
-        exclusive (open) by whether you consider the starts or stops to
-        have happened first.  In either case, point events will need
-        special handling.
+                     (a) <, >=     (b) <, =, >      (c) <=, =, >=
+            stop     <---)         <---)            <---]
+            point         [--->         (*)           [*]
+            start         [--->            (--->      [--->
+
+        In (a), intervals abut and points are considered to start but
+        not stop.  There is one transition.  In (b), all intervals and
+        points are exclusive (open).  There are two transitions.  In
+        (c), points last the entire duration of "when" and intervals are
+        inclusive (closed).  There are two transitions.
 
         types: Types of events of transitions to yield.  Defaults to all
             event types.
@@ -174,15 +182,19 @@ class EventSequence:
         def gen_txs(event_idxs):
             for idx in event_idxs:
                 ev = self._events[idx]
-                # Interpret each event as an interval
+                # Generate start and end transitions.  Point events
+                # generate only a start impulse.
                 if isinstance(ev.when, interval.Interval):
-                    lo = ev.when.lo
-                    hi = ev.when.hi
+                    # Point interval
+                    if ev.when.lo == ev.when.hi:
+                        yield (ev.when.lo, 1, ev)
+                    # Interval with positive length
+                    else:
+                        yield (ev.when.lo, 1, ev)
+                        yield (ev.when.hi, 0, ev)
                 else:
-                    lo = ev.when
-                    hi = ev.when
-                yield (lo, 1, ev)
-                yield (hi, 0, ev)
+                    # Point event
+                    yield (ev.when, 1, ev)
         def txs_sort_key(t):
             return (t[0], -t[1])
         def txs_grp_key(t):
@@ -196,14 +208,18 @@ class EventSequence:
                               key=txs_sort_key))
         for when, txs_evs in itools.groupby(
                 heapq.merge(*txs, key=txs_sort_key), key=txs_grp_key):
+            points = []
             starts = []
             stops = []
             for _, tx, ev in txs_evs:
-                if tx == 0:
+                if (not isinstance(ev.when, interval.Interval) or
+                        ev.when.lo == ev.when.hi):
+                    points.append(ev)
+                elif tx == 0:
                     stops.append(ev)
                 else:
                     starts.append(ev)
-            yield (when, starts, stops)
+            yield (when, starts, stops, points)
 
     def types(self):
         return self._types2evs.keys()
