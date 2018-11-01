@@ -146,36 +146,37 @@ class Interval:
         >>> Interval('b', 'c') in Interval('a', 'd')  # -> True
         >>> Interval('b', 'c').allen_relation(Interval('a', 'd'))  # -> <AllenRelation.inside: 2>
         """
-        self._lo = lo
-        # Infer hi from length or treat as point interval
-        if hi is not None:
-            self._hi = hi
-        else:
-            if length is not None:
-                self._hi = lo + length
+        # Default hi to lo or compute it based on the length
+        if hi is None:
+            if length is None:
+                hi = lo
             else:
-                self._hi = lo
+                hi = lo + length
+        # Check that lo <= hi
+        if lo > hi:
+            raise ValueError(
+                'Bad interval bounds: (lo: {!r}) </= (hi: {!r})'
+                .format(lo, hi))
+        # Compute the length if not provided and if possible
+        if length is None:
+            try:
+                length = hi - lo
+            except TypeError:
+                pass
+        # Make sure point / empty intervals are sensible: both bounds
+        # must be open (empty) or both must be closed (point), the
+        # length should be zero
+        if lo == hi:
+            lo_open = lo_open or hi_open
+            hi_open = lo_open
+            if length is None:
+                length = 0
+        # Setup the interval from the sane values
+        self._lo = lo
+        self._hi = hi
         self._lopen = lo_open
         self._hopen = hi_open
         self._length = length
-        # Make sure lo <= hi
-        if self._lo > self._hi:
-            raise ValueError(
-                'Bad interval bounds: (lo: {!r}) </= (hi: {!r})'
-                .format(self._lo, self._hi))
-        # Make sure point / empty intervals are sensible
-        if self._lo == self._hi:
-            is_empty = self._lopen or self._hopen
-            self._lopen = is_empty
-            self._hopen = is_empty
-            if length is None:
-                self._length = 0
-        # Try to compute the length
-        elif self._length is None:
-            try:
-                self._length = self._hi - self._lo
-            except TypeError:
-                pass
 
     @property
     def lo(self):

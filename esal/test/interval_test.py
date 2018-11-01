@@ -144,27 +144,63 @@ class AllenAlgebraTest(unittest.TestCase):
 class IntervalTest(unittest.TestCase):
 
     def test_construct_bad_lo_hi(self):
+        for lo, hi in (
+                (2, 1),
+                ('2018-11-01', '2018-10-31'),
+                (datetime.date(2018, 11, 1),
+                 datetime.date(2018, 10, 31)),
+        ):
+            with self.assertRaises(ValueError):
+                Interval(lo, hi)
+        # Negative length should also result in the same error
         with self.assertRaises(ValueError):
-            Interval(2, 1)
+            Interval(2, length=-1)
 
     def test_construct_compute_length(self):
+        # Type that supports subtraction
         i = Interval(3, 8)
         self.assertEqual(3, i.lo)
         self.assertEqual(8, i.hi)
         self.assertEqual(5, i.length())
+        # Type that does not support subtraction
+        i = Interval('2018-10-31', '2018-11-01')
+        self.assertEqual('2018-10-31', i.lo)
+        self.assertEqual('2018-11-01', i.hi)
+        self.assertEqual(None, i.length())
 
     def test_construct_from_lo_length(self):
         i = Interval(3, length=5)
         self.assertEqual(3, i.lo)
         self.assertEqual(8, i.hi)
         self.assertEqual(5, i.length())
-
-    def test_construct_from_lo_length_typed_zero(self):
+        i = Interval(datetime.date(2018, 10, 31),
+                     length=datetime.timedelta(1))
+        self.assertEqual(datetime.date(2018, 10, 31), i.lo)
+        self.assertEqual(datetime.date(2018, 11, 1), i.hi)
+        self.assertEqual(datetime.timedelta(1), i.length())
+        # Non-integer zero length.  The type of the zero must be
+        # preserved.
         i = Interval(datetime.date(2018, 10, 31),
                      length=datetime.timedelta(0))
         self.assertEqual(datetime.date(2018, 10, 31), i.lo)
         self.assertEqual(datetime.date(2018, 10, 31), i.hi)
         self.assertEqual(datetime.timedelta(0), i.length())
+
+    def test_construct_point(self):
+        # Types that support subtraction
+        i = Interval(3)
+        self.assertEqual(3, i.lo)
+        self.assertEqual(3, i.hi)
+        self.assertEqual(0, i.length())
+        i = Interval(datetime.date(2018, 10, 31))
+        self.assertEqual(datetime.date(2018, 10, 31), i.lo)
+        self.assertEqual(datetime.date(2018, 10, 31), i.hi)
+        self.assertEqual(datetime.timedelta(0), i.length())
+        # Type that does not support subtraction
+        i = Interval('2018-10-31')
+        self.assertEqual('2018-10-31', i.lo)
+        self.assertEqual('2018-10-31', i.hi)
+        self.assertEqual(0, i.length())
 
     def test_is_point(self):
         i = Interval(3)
