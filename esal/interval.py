@@ -1,7 +1,9 @@
 # Interval objects and related functionality
 
-# Copyright (c) 2018 Aubrey Barnard.  This is free software.  See
-# LICENSE for details.
+# Copyright (c) 2018-2019 Aubrey Barnard.
+#
+# This is free software released under the MIT License.  See `LICENSE`
+# for details.
 
 
 from enum import Enum
@@ -23,8 +25,7 @@ class AllenRelation(Enum):
     https://en.wikipedia.org/wiki/Allen%27s_interval_algebra
     """
 
-    # Inververse relations have constants that are negatives of each
-    # other
+    # Inverse relations have constants that are negatives of each other
 
                         # Sorted order
     before = -6         #  0: a1 a2 b1 b2
@@ -127,8 +128,8 @@ class Interval:
             support subtraction.
 
         A point interval is one where the bounds are equal and closed,
-        e.g. "x(8, 8)x".  An empty interval is one where the bounds are
-        equal and open, e.g. "o(8, 8)o".
+        e.g. "•(8, 8)•".  An empty interval is one where the bounds are
+        equal and open, e.g. "◦(8, 8)◦".
 
         If the bounds support subtraction, then the length of the
         interval will be computed automatically.  Otherwise, you can
@@ -140,7 +141,7 @@ class Interval:
 
         >>> Interval(8)  # point interval
         >>> Interval(8, lo_open=True)  # empty interval
-        >>> Interval(0.0, float('inf'), hi_open=True)  # non-negative reals: x(0,∞)o
+        >>> Interval(0.0, float('inf'), hi_open=True)  # non-negative reals: •(0,∞)◦
         >>> Interval('a', 'b', length=1)
         >>> 'b' in Interval('a', 'c')  # -> True
         >>> Interval('b', 'c') in Interval('a', 'd')  # -> True
@@ -259,10 +260,10 @@ class Interval:
 
     def __str__(self):
         return '{}({}, {}){}'.format(
-            'o' if self.is_lo_open else 'x',
+            '◦' if self.is_lo_open else '•',
             self.lo,
             self.hi,
-            'o' if self.is_hi_open else 'x',
+            '◦' if self.is_hi_open else '•',
         )
 
     # Python set API
