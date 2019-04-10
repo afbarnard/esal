@@ -117,7 +117,7 @@ class EventSequence:
         return len(self._events)
 
     def __getitem__(self, index):
-        if isinstance(index, int):
+        if isinstance(index, (int, slice)):
             return self._events[index]
         else:
             return self._facts[index]
@@ -300,7 +300,9 @@ class EventSequence:
                 return False
         return True # ENH return proof, perhaps as separate method 'occur'?
 
-    def first(self, type, after=None, strict=True):
+    def first(self, type=None, after=None, strict=True):
+        if type is None and after is None:
+            return (True, (0, self._events[0]))
         ev_idxs = self._types2evs.get(type)
         if ev_idxs is None:
             return (False, None)
