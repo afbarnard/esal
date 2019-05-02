@@ -106,7 +106,7 @@ def _intersection(itvl1, itvl2):
 class Interval:
     """Interval for any orderable type"""
 
-    __slots__ = ('_lo', '_hi', '_lopen', '_hopen', '_length')
+    __slots__ = ('_lo', '_hi', '_lopen', '_hopen', '_length', '_key')
 
     def __init__(
             self,
@@ -178,6 +178,7 @@ class Interval:
         self._lopen = lo_open
         self._hopen = hi_open
         self._length = length
+        self._key = None
 
     @property
     def lo(self):
@@ -196,24 +197,27 @@ class Interval:
         return self._hopen
 
     def is_empty(self):
-        return (self.lo == self.hi and
-                self.is_lo_open and self.is_hi_open)
+        return (self._lo == self._hi and
+                self._lopen and self._hopen)
 
     def is_point(self):
-        return (self.lo == self.hi and
-                not (self.is_lo_open or self.is_hi_open))
+        return (self._lo == self._hi and
+                not (self._lopen or self._hopen))
 
     def length(self):
         return self._length
 
     def key(self):
-        return (self.lo, self.is_lo_open, self.hi, not self.is_hi_open)
+        if self._key is None:
+            self._key = (self.lo, self.is_lo_open,
+                         self.hi, not self.is_hi_open)
+        return self._key
 
     def __eq__(self, other):
         return self is other or (
-            isinstance(other, Interval) and
-            (self.is_empty() and other.is_empty() or
-             self.key() == other.key()))
+            type(other) is Interval and
+            (self.key() == other.key() or
+             self.is_empty() and other.is_empty()))
 
     def __hash__(self):
         if self.is_empty():
