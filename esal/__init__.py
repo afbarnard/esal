@@ -51,14 +51,14 @@ iterable.
 
 -----
 
-Copyright (c) 2018 Aubrey Barnard.  This is free, open source software,
-released under the MIT license.  See `LICENSE` for details.
+Copyright (c) 2018-2019 Aubrey Barnard.  This is free, open source
+software, released under the MIT license.  See `LICENSE` for details.
 """
 # The above text is used by `setup.py`.
 
 
 # Version
-__version__ = '0.3.0'
+__version__ = '0.3.1'
 
 
 # Expose core API at the top level

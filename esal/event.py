@@ -1,7 +1,9 @@
 # Events and event sequences
 
-# Copyright (c) 2018 Aubrey Barnard.  This is free software.  See
-# LICENSE for details.
+# Copyright (c) 2018-2019 Aubrey Barnard.
+#
+# This is free software released under the MIT License.  See `LICENSE`
+# for details.
 
 
 import heapq
@@ -133,10 +135,7 @@ class EventSequence:
         return iter(self._events)
 
     def facts(self):
-        if self._facts is not None:
-            return self._facts.items()
-        else:
-            return ()
+        return self._facts.items()
 
     def events(self, *types):
         """
@@ -221,11 +220,11 @@ class EventSequence:
                     starts.append(ev)
             yield (when, starts, stops, points)
 
+    def fact_keys(self):
+        return self._facts.keys()
+
     def types(self):
         return self._types2evs.keys()
-
-    def n_types(self):
-        return len(self._types2evs)
 
     def has_fact(self, key):
         return key in self._facts
