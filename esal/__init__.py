@@ -1,6 +1,6 @@
 """
 Event Sequence Analysis Library: representing and querying event
-sequences / timelines.
+sequences and timelines.
 
 
 Concepts
@@ -60,8 +60,10 @@ iterable.
 
 -----
 
-Copyright (c) 2018-2019 Aubrey Barnard.  This is free, open source
-software, released under the MIT license.  See `LICENSE` for details.
+Copyright (c) 2015, 2018-2019 Aubrey Barnard.
+
+This is free software released under the MIT license.  See `LICENSE` for
+details.
 """
 # The above text is used by `setup.py`.
 

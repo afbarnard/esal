@@ -1,7 +1,9 @@
 """Esal package definition and install configuration"""
 
-# Copyright (c) 2018 Aubrey Barnard.  This is free software released
-# under the MIT license.  See `LICENSE` for details.
+# Copyright (c) 2018-2019 Aubrey Barnard.
+#
+# This is free software released under the MIT License.  See `LICENSE`
+# for details.
 
 
 import setuptools
@@ -16,7 +18,7 @@ _desc_short = _desc_paragraphs[0].replace('\n', ' ')
 # Include all the package documentation in the long description except
 # for the first and last paragraphs which are the short description and
 # the copyright notice, respectively
-_desc_long = '\n\n'.join(_desc_paragraphs[1:-1])
+_desc_long = '\n\n'.join(_desc_paragraphs[1:-3])
 
 
 # Define package attributes

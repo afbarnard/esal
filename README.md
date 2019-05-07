@@ -2,12 +2,8 @@ Event Sequence Analysis Library
 ===============================
 
 
-Esal ("easel") is a library for the descriptive statistical analysis and
-manipulation of event sequences and timelines.  Esal is intended to be
-used for exploring event sequence data and preparing data for modeling,
-but does not do any modeling itself.  Conceptually, Esal is a
-representation for a dataset of sequences / timelines and an associated
-set of meaningful operations (selection, counting, transformation).
+Esal ("easel") is a library for representing and querying event
+sequences and timelines.
 
 
 Features
@@ -20,20 +16,12 @@ implemented features are:
 * Event sequence data structure for the efficient querying of event
   sequences
 * Interval objects
-* Allen's interval algebra (constant-time implementation that uses the
-  minimum number of comparisons)
+* Allen's interval algebra (constant-time implementation that uses only
+  a few comparisons)
 
-The planned features are:
-
-* Selection and counting of sequences
-* Selection and counting of events
-* Sampling events and sequences
-* Temporal statistics
-* Reading/Writing various relational and flat representations
-
-Some of the planned features have already been implemented but haven't
-yet been organized into an official API.  Feel free to look through the
-code.  Suggestions are welcome.
+Other features have already been implemented but haven't yet been
+organized into an official API.  Feel free to look through the code.
+Suggestions are welcome.
 
 
 Requirements
@@ -53,11 +41,17 @@ it with `python3 -m pip`.  For more information, see the [Pip
 documentation]( https://pip.pypa.io/).
 
 
+Test
+----
+
+    python3 -m unittest esal/test/*.py
+
+
 License
 -------
 
 Esal is free, open source software.  It is released under the MIT
-license.  See the `LICENSE` file for details.
+License.  See the `LICENSE` file for details.
 
 
 Concepts
@@ -80,5 +74,7 @@ request work flow.
 
 -----
 
-Copyright (c) 2018 Aubrey Barnard.  This is free software.  See LICENSE
-for details.
+Copyright (c) 2015, 2018-2019 Aubrey Barnard.
+
+This is free software released under the MIT License.  See `LICENSE` for
+details.
