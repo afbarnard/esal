@@ -1,39 +1,48 @@
 """
-Event Sequence Analysis Library: statistical analysis and
-manipulation of event sequence data
-
-Esal ("easel") is a library for the descriptive statistical analysis and
-manipulation of event sequences and timelines.  Esal is intended to be
-used for exploring event sequence data and preparing data for modeling,
-but does not do any modeling itself.  Conceptually, Esal is a
-representation for a dataset of sequences / timelines and an associated
-set of meaningful operations (selection, counting, transformation).
+Event Sequence Analysis Library: representing and querying event
+sequences / timelines.
 
 
 Concepts
 --------
 
 An event describes something that happens, either at a point in time or
-over some span of time.  It can be thought of as a 4-tuple
+over some span of time.  While a raw event record in your data might
+have several fields such as
 
-    (sequence-id, when, event-type, value)
+    (sequence-id, from-when, to-when, what-1, what-2, value-1, value-2),
 
-where the order of the fields makes the tuples sortable.  The object
-that represents *when* an event occurs can be any orderable, which
-allows for flexibility in handling anything from point events in
-continuous (`float`) or discrete (`int`) time, to intervals of such
-times, to dates, to strings (e.g. `'2018-08-06'`).  The value is
-optional and when it is omitted, the event is an occurrence event (an
-event whose value is effectively `occur = True`).  The sequence
-identifier indicates what sequence of events (or timeline) the event
-belongs to.  An event normally corresponds to a particular variable,
-measurement, or observation of interest, such as rain.  (When did it
-start raining?  How long did it rain?  How much rain fell?)
+an event in the abstract is the 3-tuple
+
+    (when, event-type, value).
+
+where the order of the fields makes both types of tuples sortable by
+time.  An event object represents just such a 3-tuple.  For example, the
+above event record might be represented as the event object with
+compound fields
+
+    esal.Event(esal.Interval(from, to), (what1, what2), (val1, val2)).
+
+An event object omits the sequence ID because that is a property of a
+collection of events (an event sequence or timeline), and it would be
+redundant for events to repeatedly store it.
+
+Event objects are intended to be flexible yet useful.  The object that
+represents *when* an event occurs can be any orderable, which allows for
+flexibility in handling anything from point events in continuous
+(`float`) or discrete (`int`) time, to intervals of such times, to
+dates, to strings (e.g. `'2018-08-06'`).  The value is optional and when
+it is omitted, the event is an occurrence event (an event whose value is
+conceptually `occur = True`).  An event normally corresponds to a
+particular variable, measurement, or observation of interest, such as
+rain.  (When did it start raining?  How long did it rain?  How much rain
+fell?)
 
 An event sequence is an ordered collection of events that all have the
 same sequence identifier.  An event sequence normally describes the
-timeline of a particular entity of interest, such as a person.  Events
-can be sampled with some pattern or happen over arbitrary intervals, so
+timeline of a particular entity of interest, such as a person or place
+(e.g. the weather observations from a particular station).  Events can
+be sampled with some pattern or happen over arbitrary intervals, so
 sequences may be regular, or irregular, or something in between.
 
 A timeline is a type of event sequence where all of the events have
@@ -58,7 +67,7 @@ software, released under the MIT license.  See `LICENSE` for details.
 
 
 # Version
-__version__ = '0.3.1'
+__version__ = '0.4.0'
 
 
 # Expose core API at the top level
