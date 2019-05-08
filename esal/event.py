@@ -92,13 +92,31 @@ class EventSequence:
         self._id = id if id is not None else builtins.id(self)
         self._facts = dict(facts) if facts else {}
         # Store the events by ascending `when`
-        evs = [(e.when, e) for e in events]
-        evs.sort(key=lambda p: (p[0], p[1].type))
-        # Keep the `when`s to use as an index
-        whens_events = tuple(zip(*evs))
-        self._whens, self._events = (whens_events
-                                     if whens_events
-                                     else ((), ()))
+        self._events = sorted(
+            events, key=operator.attrgetter('when', 'type'))
+        # Make indexes for whens, one each for lows and highs
+        self._los = [None] * len(self._events)
+        self._his = [None] * len(self._events)
+        diff_los_his = False
+        for idx, event in enumerate(self._events):
+            when = event.when
+            if isinstance(when, interval.Interval):
+                lo = when.lo
+                hi = when.hi
+                self._los[idx] = lo
+                self._his[idx] = (hi, idx)
+                if not diff_los_his and lo != hi:
+                    diff_los_his = True
+            else:
+                self._los[idx] = when
+                self._his[idx] = (when, idx)
+        # If the highs and lows are different, sort the highs to turn
+        # them into an index.  Otherwise delete.  (Lows are already
+        # sorted.)
+        if diff_los_his:
+            self._his.sort()
+        else:
+            self._his = None
         # Build an index of event types to events
         types2evs = {}
         for idx, event in enumerate(self._events):
@@ -265,16 +283,16 @@ class EventSequence:
         """Return the number of events in this sequence of the given type."""
         return len(self._types2evs.get(type, ()))
 
-    def has_when(self, when): # TODO return proof?
+    def has_when(self, when): # TODO return proof? # FIXME handle Interval whens
         """Whether this sequence contains an event with the given when."""
         found, _ = sose.binary_search(
-            self._whens, when, target=sose.Target.any)
+            self._los, when, target=sose.Target.any)
         return found
 
-    def has_event(self, event): # TODO return proof?
+    def has_event(self, event): # TODO return proof? # FIXME handle Interval whens
         """Whether this sequence contains the given `esal.Event`."""
         found, (lo, hi) = sose.binary_search(
-            self._whens, event.when, target=sose.Target.range)
+            self._los, event.when, target=sose.Target.range)
         if not found:
             return False
         found, (lo, hi) = sose.binary_search(
@@ -291,7 +309,8 @@ class EventSequence:
 
     # Advanced queries
 
-    def first(self, type=None, after=None, strict=True):
+    def first(self, type=None, after=None, strict=False): # FIXME handle Interval whens
+        """TODO"""
         if type is None and after is None:
             return (True, (0, self._events[0]))
         ev_idxs = self._types2evs.get(type)
@@ -306,7 +325,7 @@ class EventSequence:
         _, (lo, hi) = sose.binary_search(
             ev_idxs,
             after,
-            key=lambda i, x: self._whens[x],
+            key=lambda i, x: self._los[x],
             target=sose.Target.range,
         )
         if strict and hi < len(ev_idxs):
@@ -318,36 +337,39 @@ class EventSequence:
         else:
             return (False, None)
 
-    def last(self, type=None, before=None, strict=True): # TODO
+    def last(self, type=None, before=None, strict=False): # TODO
+        """Not implemented"""
         return (False, None)
 
-    def events_after(self, when_lo=None, strict=True): # TODO
+    def events_after(self, when_lo=None, strict=False): # TODO
+        """Not implemented"""
         return ()
 
-    def events_before(self, when_hi=None, strict=True): # TODO
+    def events_before(self, when_hi=None, strict=False): # TODO
+        """Not implemented"""
         return ()
 
-    def events_between(self, when_lo=None, when_hi=None, strict=True):
+    def events_between(self, when_lo=None, when_hi=None, strict=False): # TODO use Interval as single argument once Intervals support unbounded via `None` # TODO rename to events_within # FIXME handle Interval whens
         """
-        Return a tuple containing the events in the given interval.
+        Return a collection of the events in the given interval.
 
         when_lo:
-            Lower bound or unlimited if `None`.
+            Lower bound, or unlimited if `None`.
         when_hi:
-            Upper bound or unlimited if `None`.
+            Upper bound, or unlimited if `None`.
         """
         # Find the events in the interval
         if when_lo is not None and when_hi is not None:
             _, (lo, hi) = sose.binary_search(
-                self._whens, when_lo, target_key_hi=when_hi,
+                self._los, when_lo, target_key_hi=when_hi,
                 target=sose.Target.range)
         elif when_lo is not None:
             _, lo = sose.binary_search(
-                self._whens, when_lo, target=sose.Target.lo)
+                self._los, when_lo, target=sose.Target.lo)
             hi = len(self)
         elif when_hi is not None:
             _, hi = sose.binary_search(
-                self._whens, when_hi, target=sose.Target.hi)
+                self._los, when_hi, target=sose.Target.hi)
             lo = 0
         else:
             lo = 0
@@ -355,7 +377,8 @@ class EventSequence:
         # Return the slice with the selected events
         return self._events[lo:hi]
 
-    def events_overlapping(self, when_lo=None, when_hi=None, strict=True): # TODO
+    def events_overlapping(self, when_lo=None, when_hi=None, strict=False): # TODO use Interval as single argument once Intervals support unbounded via `None`
+        """Not implemented"""
         return ()
 
     def transitions(self, *types):
@@ -427,7 +450,7 @@ class EventSequence:
                     starts.append(ev)
             yield (when, starts, stops, points)
 
-    def before(self, type1, type2, *types, strict=True): # TODO rename: has_subsequence? # TODO return proof?
+    def before(self, type1, type2, *types, strict=False): # TODO rename: has_subsequence? # TODO return proof? # FIXME handle Interval whens
         """
         Whether this sequence contains events of the given types in the
         given order.
@@ -437,12 +460,12 @@ class EventSequence:
             t2_idxs = self._types2evs.get(type2)
             if t1_idxs and t2_idxs:
                 lte_cmp = operator.lt if strict else operator.le
-                return lte_cmp(self._whens[t1_idxs[0]],
-                               self._whens[t2_idxs[-1]])
+                return lte_cmp(self._los[t1_idxs[0]],
+                               self._los[t2_idxs[-1]])
             else:
                 return False
         else:
-            min_t = self._whens[0]
+            min_t = self._los[0]
             for type in (type1, type2, *types):
                 ev_idxs = self._types2evs.get(type, ())
                 if not ev_idxs:
@@ -450,18 +473,18 @@ class EventSequence:
                 _, lo = sose.binary_search(
                     ev_idxs,
                     min_t,
-                    key=lambda i, x: self._whens[x],
+                    key=lambda i, x: self._los[x],
                     target=sose.Target.lo,
                 )
                 if lo < len(ev_idxs):
-                    min_t = self._whens[ev_idxs[lo]]
+                    min_t = self._los[ev_idxs[lo]]
                     if strict:
                         found, hi = sose.binary_search(
-                            self._whens, min_t, target=sose.Target.hi)
-                        if hi < len(self._whens):
-                            min_t = self._whens[hi]
+                            self._los, min_t, target=sose.Target.hi)
+                        if hi < len(self._los):
+                            min_t = self._los[hi]
                         elif found:
-                            min_t = self._whens[-1]
+                            min_t = self._los[-1]
                         else:
                             return False
                 else:

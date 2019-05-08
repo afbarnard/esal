@@ -1,7 +1,9 @@
 # Tests `event.py`
 
-# Copyright (c) 2018 Aubrey Barnard.  This is free software.  See
-# LICENSE for details.
+# Copyright (c) 2018-2019 Aubrey Barnard.
+#
+# This is free software released under the MIT License.  See `LICENSE`
+# for details.
 
 
 import operator
@@ -188,7 +190,8 @@ class EventSequenceTest(unittest.TestCase):
                 last_t2 = max(t2s) if t2s else None
                 # Strict less than
                 lte = first_t1 < last_t2 if t1s and t2s else False
-                self.assertEqual(lte, self.es.before(t1, t2), (t1, t2))
+                self.assertEqual(
+                    lte, self.es.before(t1, t2, strict=True), (t1, t2))
                 # Less than or equal
                 lte = first_t1 <= last_t2 if t1s and t2s else False
                 self.assertEqual(
@@ -219,7 +222,8 @@ class EventSequenceTest(unittest.TestCase):
             (('z', 'v', 'h', 'k', 'f', 'q', 'a'), False), # No a
         )
         for seq, exists in seqs:
-            self.assertEqual(exists, self.es.before(*seq), seq)
+            self.assertEqual(
+                exists, self.es.before(*seq, strict=True), seq)
 
     def test_before_monotonic(self):
         seqs = (
@@ -265,12 +269,12 @@ class EventSequenceTest(unittest.TestCase):
             (None, None),
         )
         for lo, hi in los_his:
-            expected = tuple(
+            expected = list(
                 x[1] for x in ordered_evs
                 if (lo is None or lo <= x[0]) and
                    (hi is None or x[0] <= hi))
             self.assertEqual(expected, self.es.events_between(lo, hi))
-            self.assertEqual((), self.empty.events_between(lo, hi))
+            self.assertEqual([], self.empty.events_between(lo, hi))
 
     def test_transitions_empty(self):
         self.assertEqual((), tuple(self.empty.transitions()))
