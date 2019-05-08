@@ -1,14 +1,17 @@
 # Tests `sorted_search.py`
 
-# Copyright (c) 2018 Aubrey Barnard.  This is free software.  See
-# LICENSE for details.
+# Copyright (c) 2018-2019 Aubrey Barnard.
+#
+# This is free software released under the MIT License.  See `LICENSE`
+# for details.
 
 
 import math
 import random
 import unittest
 
-from ..sorted_search import Target, binary_search, _binary_search
+from ..sorted_search import (
+    Target, binary_search, _binary_search, multi_search, mk_bat)
 
 
 class BinarySearchTest(unittest.TestCase):
@@ -261,3 +264,105 @@ class BinarySearchTest(unittest.TestCase):
         expected = (True, 4, 4, 5)
         actual = _binary_search(nums, 4, 4, target=Target.lo)
         self.assertEqual(expected, actual, (nums, (4, 4)))
+
+
+class MultiSearchTest(unittest.TestCase):
+
+    #       0  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18 19
+    srtd = [1, 1, 2, 2, 3, 3, 3, 4, 4, 5, 5, 5, 5, 5, 5, 7, 7, 8, 8, 9]
+
+    tbl = [
+        (7, 5, 3, 9, 8), #  0
+        (7, 5, 8, 7, 1), #  1
+        (5, 6, 3, 6, 5), #  2
+        (7, 6, 2, 7, 4), #  3
+        (7, 6, 4, 0, 8), #  4
+        (0, 1, 3, 5, 8), #  5
+        (0, 8, 0, 7, 4), #  6
+        (6, 4, 5, 4, 5), #  7
+        (8, 7, 3, 2, 1), #  8
+        (2, 6, 4, 4, 8), #  9
+
+        (2, 6, 4, 4, 8), # 10 (9)
+        (6, 4, 5, 4, 5), # 11 (7)
+        (7, 5, 3, 9, 8), # 12 (0)
+        (5, 6, 3, 6, 5), # 13 (2)
+        (7, 6, 4, 0, 8), # 14 (4)
+        (8, 7, 3, 2, 1), # 15 (8)
+        (7, 6, 4, 0, 8), # 16 (4)
+        (7, 5, 8, 7, 1), # 17 (1)
+        (6, 4, 5, 4, 5), # 18 (7)
+        (5, 6, 3, 6, 5), # 19 (2)
+    ]
+
+    def cols_bats(self):
+        cols = tuple(zip(*self.tbl))
+        bats = [mk_bat(c) for c in cols]
+        return cols, bats
+
+    def test_search_single_sorted_array(self):
+        tgt_exps = [
+            (0, (False, set(), [(0, 0)])),
+            (1, (True, set([0, 1]), [(0, 2)])),
+            (5, (True, set(range(9, 15)), [(9, 15)])),
+            (9, (True, set([19]), [(19, 20)])),
+        ]
+        for tgt, exp in tgt_exps:
+            with self.subTest(tgt):
+                actual = multi_search((self.srtd,), (tgt,))
+                self.assertEqual(exp, actual)
+
+    def test_search_5_columns(self):
+        _, bats = self.cols_bats()
+        keys = [lambda i, x: x] * 5
+        args_exps = [
+            # Fail column 1
+            ((tuple(range(5)), (1, 2, 3, 4, 5)),
+             (False, set(), [(2, 2), None, None, None, None])),
+            # Fail column 2
+            ((tuple(range(5)), (2, 7, 7, 4, 5)),
+             (False, set(), [(2, 4), (17, 19), None, None, None])),
+            # Fail column 3
+            ((tuple(range(5)), (0, 8, 3, 8, 7)),
+             (False, set(), [(0, 2), (19, 20), (2, 10), None, None])),
+            # Fail column 4
+            ((tuple(range(5)), (6, 4, 5, 0, 9)),
+             (False, set(), [(7, 10), (1, 4), (15, 18), (0, 3), None])),
+            # Fail column 5
+            ((tuple(range(5)), (7, 5, 3, 9, 5)),
+             (False, set(),
+              [(10, 18), (4, 8), (2, 10), (18, 20), (6, 12)])),
+            # Find unique
+            ((tuple(range(5)), (0, 1, 3, 5, 8)),
+             (True, set([5]),
+              [(0, 2), (0, 1), (2, 10), (10, 11), (12, 20)])),
+            # Find multiple
+            ((tuple(range(5)), (6, 4, 5, 4, 5)),
+             (True, set([7, 11, 18]),
+              [(7, 10), (1, 4), (15, 18), (5, 10), (6, 12)])),
+        ]
+        for args, exp in args_exps:
+            with self.subTest(args):
+                bat_idxs, tgt = args
+                bats_ = tuple(bats[i] for i in bat_idxs)
+                actual = multi_search(bats_, tgt, keys)
+                self.assertEqual(exp, actual)
+
+    def test_1_sorted_1_binary_association_table(self):
+        cols = list(zip(*sorted(t[:2] for t in self.tbl)))
+        cols[1] = mk_bat(cols[1])
+        keys = [None, lambda i, x: x]
+        tgt_exps = [
+            ((0, 0), (False, set(), [(0, 2), (0, 0)])),
+            ((0, 8), (True, set([1]), [(0, 2), (19, 20)])),
+            ((1, 1), (False, set(), [(2, 2), None])),
+            ((2, 4), (False, set(), [(2, 4), (1, 4)])),
+            ((7, 5), (True, set(range(10, 14)), [(10, 18), (4, 8)])),
+            ((7, 6), (True, set(range(14, 18)), [(10, 18), (8, 17)])),
+            ((8, 8), (False, set(), [(18, 20), (19, 20)])),
+            ((9, 9), (False, set(), [(20, 20), None])),
+        ]
+        for tgt, exp in tgt_exps:
+            with self.subTest(tgt):
+                actual = multi_search(cols, tgt, keys)
+                self.assertEqual(exp, actual)

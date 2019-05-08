@@ -103,15 +103,16 @@ class EventSequence:
             if isinstance(when, interval.Interval):
                 lo = when.lo
                 hi = when.hi
-                self._los[idx] = lo
+                self._los[idx] = (lo, idx)
                 self._his[idx] = (hi, idx)
                 if not diff_los_his and lo != hi:
                     diff_los_his = True
             else:
-                self._los[idx] = when
-                self._his[idx] = (when, idx)
+                pair = (when, idx) # Only allocate 1 pair
+                self._los[idx] = pair
+                self._his[idx] = pair
         # If the highs and lows are different, sort the highs to turn
-        # them into an index.  Otherwise delete.  (Lows are already
+        # them into an index.  Otherwise discard.  (Lows are already
         # sorted.)
         if diff_los_his:
             self._his.sort()
@@ -246,20 +247,32 @@ class EventSequence:
 
     # Basic event queries
 
-    def events(self, *types):
+    def event_indices(self, *types):
         """
-        Yield events of the specified types (or all events).
+        Return indices of events of the specified types (or all events).
 
         types:
-            Types of events to yield.  When not specified, yield events
-            of all types.
+            Types of events to include.  When not specified, include
+            events of all types.
         """
         if not types:
-            yield from self._events
+            return range(len(self._events))
         else:
-            for event_index in heapq.merge(
-                    *(self._types2evs.get(t, ()) for t in types)):
-                yield self._events[event_index]
+            return heapq.merge(
+                *(self._types2evs.get(t, ()) for t in types))
+
+    def events(self, *types):
+        """
+        Return events of the specified types (or all events).
+
+        types:
+            Types of events to include.  When not specified, include
+            events of all types.
+        """
+        if not types:
+            return iter(self._events)
+        else:
+            return (self._events[i] for i in self.event_indices(*types))
 
     def types(self):
         """Return the event types in this sequence."""
@@ -283,21 +296,19 @@ class EventSequence:
         """Return the number of events in this sequence of the given type."""
         return len(self._types2evs.get(type, ()))
 
-    def has_when(self, when): # TODO return proof? # FIXME handle Interval whens
+    def has_when(self, when): # TODO return proof?
         """Whether this sequence contains an event with the given when."""
-        found, _ = sose.binary_search(
-            self._los, when, target=sose.Target.any)
+        found, _, _ = self._find_when(when)
         return found
 
-    def has_event(self, event): # TODO return proof? # FIXME handle Interval whens
+    def has_event(self, event): # TODO return proof?
         """Whether this sequence contains the given `esal.Event`."""
-        found, (lo, hi) = sose.binary_search(
-            self._los, event.when, target=sose.Target.range)
+        found, idxs, _ = self._find_when(event.when)
         if not found:
             return False
         found, (lo, hi) = sose.binary_search(
-            self._events, event.type, lo=lo, hi=hi,
-            target=sose.Target.range, key=lambda i, x: x.type)
+            self._events, event.type, lo=idxs[0], hi=idxs[-1] + 1,
+            key=lambda i, x: x.type, target=sose.Target.range)
         if not found:
             return False
         for i in range(lo, hi):
@@ -305,81 +316,158 @@ class EventSequence:
                 return True
         return False
 
-    # TODO span?
+    def span(self):
+        """
+        Return the extrema of this event sequence, the minimum and maximum
+        whens, as an interval.
+        """
+        if len(self._events) > 0:
+            if self._his is None:
+                return interval.Interval(self._los[0], self._los[-1])
+            else:
+                return interval.Interval(self._los[0], self._his[-1])
+        else:
+            # Return an empty interval for an empty event sequence
+            return interval.Interval(0, lo_open=True)
+
+    # Helpers
+
+    def _find_when(self, when):
+        # Whether to search for a point or an interval
+        lo, hi = ((when.lo, when.hi)
+                  if isinstance(when, interval.Interval)
+                  else (when, None))
+        # Search for a point
+        if hi is None or self._his is None:
+            found, itvl = sose.binary_search(
+                self._los, lo, key=lambda i, x: x[0],
+                target=sose.Target.range)
+            return found, range(*itvl), [itvl, None]
+        # Otherwise search for an interval
+        else:
+            found, idxs, itvls = sose.multi_search(
+                (self._los, self._his), (lo, hi),
+                (lambda i, x: x,) * 2)
+            return found, idxs, itvls
+
+    @staticmethod
+    def _find_whens(
+            whens_bat,
+            when_lo=None,
+            when_hi=None,
+            lo_open=False,
+            hi_open=False,
+    ):
+        lo_idx = 0 # Inclusive
+        hi_idx = len(whens_bat) # Exclusive
+        # Search for whens greater than (or equal to) the low bound
+        if when_lo is not None:
+            _, (lo, hi) = sose.binary_search(
+                whens_bat, when_lo,
+                key=lambda i, x: x[0], target=sose.Target.range)
+            # Use lo or hi based on whether strictly greater than
+            lo_idx = hi if lo_open else lo
+        # Search for whens less than (or equal to) the high bound
+        if when_hi is not None:
+            _, (lo, hi) = sose.binary_search(
+                whens_bat, when_hi, lo=lo_idx,
+                key=lambda i, x: x[0], target=sose.Target.range)
+            # Use lo or hi based on whether strictly less than
+            hi_idx = lo if hi_open else hi
+        itvl = (lo_idx, hi_idx)
+        idxs = set(whens_bat[i][1] for i in range(*itvl))
+        return len(idxs) > 0, idxs, itvl
 
     # Advanced queries
 
-    def first(self, type=None, after=None, strict=False): # FIXME handle Interval whens
-        """TODO"""
-        if type is None and after is None:
-            return (True, (0, self._events[0]))
-        ev_idxs = self._types2evs.get(type)
-        if ev_idxs is None:
-            return (False, None)
-        if after is None:
-            idx = ev_idxs[0]
-            return (True, (idx, self._events[idx]))
-        # Find the first event after the given when.  Search for the
-        # range equalling when to accommodate both strictly after and
-        # not strictly after.
-        _, (lo, hi) = sose.binary_search(
-            ev_idxs,
-            after,
-            key=lambda i, x: self._los[x],
-            target=sose.Target.range,
-        )
-        if strict and hi < len(ev_idxs):
-            idx = ev_idxs[hi]
-            return (True, (idx, self._events[idx]))
-        elif not strict and lo < len(ev_idxs):
-            idx = ev_idxs[lo]
-            return (True, (idx, self._events[idx]))
-        else:
-            return (False, None)
+    def first(self, type=None, after=None, strict=False): # TODO remove b/c redundant and has poor API
+        """Calls `events_after` and returns the index of earliest event."""
+        types = (type,) if type is not None else None
+        idxs = self.events_after(
+            when_lo=after, strict=strict, types=types)
+        found = len(idxs) > 0
+        idx = min(idxs) if found else None
+        ev = self._events[idx] if idx is not None else None
+        return found, idx, ev
 
-    def last(self, type=None, before=None, strict=False): # TODO
-        """Not implemented"""
-        return (False, None)
+    def events_after(self, when_lo=None, strict=False, types=None):
+        """Calls `events_within` providing only a lower bound."""
+        return self.events_within(when_lo=when_lo, lo_open=strict, types=types)
 
-    def events_after(self, when_lo=None, strict=False): # TODO
-        """Not implemented"""
-        return ()
+    def events_before(self, when_hi=None, strict=False, types=None):
+        """Calls `events_within` providing only an upper bound."""
+        return self.events_within(when_hi=when_hi, hi_open=strict, types=types)
 
-    def events_before(self, when_hi=None, strict=False): # TODO
-        """Not implemented"""
-        return ()
-
-    def events_between(self, when_lo=None, when_hi=None, strict=False): # TODO use Interval as single argument once Intervals support unbounded via `None` # TODO rename to events_within # FIXME handle Interval whens
+    def events_within( # TODO use Interval as single argument once Intervals support unbounded via `None`
+            self,
+            when_lo=None,
+            when_hi=None,
+            lo_open=False,
+            hi_open=False,
+            types=None,
+    ):
         """
-        Return a collection of the events in the given interval.
+        Return the indices of the events that fall within the given
+        interval.
 
         when_lo:
             Lower bound, or unlimited if `None`.
         when_hi:
             Upper bound, or unlimited if `None`.
+        lo_open:
+            Whether the lower bound is exclusive, that is, whether any
+            events should happen strictly after the given lower bound.
+        hi_open:
+            Whether the upper bound is exclusive, that is, whether any
+            events should happen strictly before the given upper bound.
+        types:
+            Types of events to include.  When not specified, include
+            events of all types.
         """
-        # Find the events in the interval
-        if when_lo is not None and when_hi is not None:
-            _, (lo, hi) = sose.binary_search(
-                self._los, when_lo, target_key_hi=when_hi,
-                target=sose.Target.range)
-        elif when_lo is not None:
-            _, lo = sose.binary_search(
-                self._los, when_lo, target=sose.Target.lo)
-            hi = len(self)
-        elif when_hi is not None:
-            _, hi = sose.binary_search(
-                self._los, when_hi, target=sose.Target.hi)
-            lo = 0
-        else:
-            lo = 0
-            hi = len(self)
-        # Return the slice with the selected events
-        return self._events[lo:hi]
+        _, idxs, _ = EventSequence._find_whens(
+            self._los, when_lo, when_hi, lo_open, hi_open)
+        if self._his is not None:
+            _, idxs_hi, _ = EventSequence._find_whens(
+                self._his, when_lo, when_hi, lo_open, hi_open)
+            idxs.intersection_update(idxs_hi)
+        if types is not None and len(idxs) > 0:
+            idxs.intersection_update(self.event_indices(*types))
+        return idxs
 
-    def events_overlapping(self, when_lo=None, when_hi=None, strict=False): # TODO use Interval as single argument once Intervals support unbounded via `None`
-        """Not implemented"""
-        return ()
+    def events_overlapping( # TODO use Interval as single argument once Intervals support unbounded via `None`
+            self,
+            when_lo=None,
+            when_hi=None,
+            lo_open=False,
+            hi_open=False,
+            types=None,
+    ):
+        """
+        Return the indices of the events that overlap the given interval.
+
+        when_lo:
+            Lower bound, or unlimited if `None`.
+        when_hi:
+            Upper bound, or unlimited if `None`.
+        lo_open:
+            Whether the lower bound is exclusive, that is, whether any
+            events should happen strictly after the given lower bound.
+        hi_open:
+            Whether the upper bound is exclusive, that is, whether any
+            events should happen strictly before the given upper bound.
+        types:
+            Types of events to include.  When not specified, include
+            events of all types.
+        """
+        _, idxs, _ = EventSequence._find_whens(
+            self._los, when_lo, when_hi, lo_open, hi_open)
+        if self._his is not None:
+            _, idxs_hi, _ = EventSequence._find_whens(
+                self._his, when_lo, when_hi, lo_open, hi_open)
+            idxs.union_update(idxs_hi)
+        if types is not None and len(idxs) > 0:
+            idxs.intersection_update(self.event_indices(*types))
+        return idxs
 
     def transitions(self, *types):
         """
@@ -405,8 +493,8 @@ class EventSequence:
         inclusive (closed).  There are two transitions.
 
         types:
-            Types of events of transitions to yield.  When not
-            specified, yields events of all types.
+            Types of events of transitions to include.  When not
+            specified, include events of all types.
         """
         def gen_txs(event_idxs):
             for idx in event_idxs:
@@ -454,37 +542,43 @@ class EventSequence:
         """
         Whether this sequence contains events of the given types in the
         given order.
+
+        *Does not currently work with interval events.*
+
+        strict:
+            Whether one event must end before the next begins, or
+            whether they may overlap.
         """
         if len(types) == 0:
             t1_idxs = self._types2evs.get(type1)
             t2_idxs = self._types2evs.get(type2)
             if t1_idxs and t2_idxs:
                 lte_cmp = operator.lt if strict else operator.le
-                return lte_cmp(self._los[t1_idxs[0]],
-                               self._los[t2_idxs[-1]])
+                return lte_cmp(self._los[t1_idxs[0]][0],
+                               self._los[t2_idxs[-1]][0])
             else:
                 return False
         else:
-            min_t = self._los[0]
+            min_t = self._los[0][0]
             for type in (type1, type2, *types):
                 ev_idxs = self._types2evs.get(type, ())
                 if not ev_idxs:
                     return False
                 _, lo = sose.binary_search(
-                    ev_idxs,
-                    min_t,
-                    key=lambda i, x: self._los[x],
-                    target=sose.Target.lo,
-                )
+                    ev_idxs, min_t,
+                    key=lambda i, x: self._los[x][0],
+                    target=sose.Target.lo)
                 if lo < len(ev_idxs):
-                    min_t = self._los[ev_idxs[lo]]
+                    min_t = self._los[ev_idxs[lo]][0]
                     if strict:
                         found, hi = sose.binary_search(
-                            self._los, min_t, target=sose.Target.hi)
+                            self._los, min_t,
+                            key=lambda i, x: x[0],
+                            target=sose.Target.hi)
                         if hi < len(self._los):
-                            min_t = self._los[hi]
+                            min_t = self._los[hi][0]
                         elif found:
-                            min_t = self._los[-1]
+                            min_t = self._los[-1][0]
                         else:
                             return False
                 else:
@@ -497,6 +591,17 @@ class EventSequence:
         """
         Copy this event sequence, replacing existing fields with the given
         values (if any).
+
+        events:
+            Iterable of events to replace those in this sequence.  If
+            `None`, just copy the events in this sequence.
+        facts:
+            Iterable of facts as (key, value) pairs to replace those in
+            this sequence.  If `None`, just copy the facts in this
+            sequence.
+        id:
+            Replacement sequence ID.  If `None`, just copy the ID of
+            this sequence.
         """
         return EventSequence(
             events=events if events is not None else self.events(),
@@ -504,18 +609,47 @@ class EventSequence:
             id=id if id is not None else self.id,
         )
 
-    def subsequence(self, when_lo=None, when_hi=None): # TODO take indices?
+    def extend(self, events=None, facts=None, id=None):
+        """
+        Return a new event sequence that adds the given events and facts (if
+        any) to those already in this sequence.
+
+        events:
+            Iterable of events to add to those in this sequence.  If
+            `None`, just copy the events in this sequence.
+        facts:
+            Iterable of facts as (key, value) pairs to add to (or to
+            overwrite) those in this sequence.  If `None`, just copy the
+            facts in this sequence.
+        id:
+            Replacement sequence ID as for `copy`.
+        """
+        return EventSequence(
+            events=(itools.chain(self.events(), events)
+                    if events is not None else self.events()),
+            facts=(itools.chain(self.facts(), facts)
+                   if facts is not None else self.facts()),
+            id=id if id is not None else self.id,
+        )
+
+    def subsequence(self, event_indices, facts=None, id=None):
         """
         Return a copy of this event sequence that contains only the events
-        in the given interval (inclusive).
+        corresponding to the given indices.
 
-        when_lo:
-            Lower bound or unlimited if `None`.
-        when_hi:
-            Upper bound or unlimited if `None`.
+        event_indices:
+            Indices of the events in this sequence to include in the
+            subsequence.
+        facts:
+            Replacement facts as for `copy`.
+        id:
+            Replacement sequence ID as for `copy`.
         """
         return self.copy(
-            events=self.events_between(when_lo, when_hi))
+            events=(self._events[i] for i in event_indices),
+            facts=facts,
+            id=id,
+        )
 
     def aggregate_events(self, aggregator, types=None):
         """

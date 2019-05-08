@@ -1,7 +1,9 @@
-# Searches on sorted lists
+"""Searches and other operations on sorted lists"""
 
-# Copyright (c) 2018 Aubrey Barnard.  This is free software.  See
-# LICENSE for details.
+# Copyright (c) 2018-2019 Aubrey Barnard.
+#
+# This is free software released under the MIT License.  See `LICENSE`
+# for details.
 
 
 from enum import Enum
@@ -171,3 +173,72 @@ def binary_search(
         found, idx, _, _ = _binary_search(
             items, target_key, None, key, lo, hi, target)
         return (found, idx)
+
+
+def multi_search(sorteds, target_keys, keys=None):
+    # Default key function
+    def itm_idx(idx, itm):
+        return (itm, idx)
+    # Fill in keys as needed
+    if keys is None:
+        keys = [itm_idx] * len(sorteds)
+    else:
+        for idx, key in enumerate(keys):
+            if key is None:
+                keys[idx] = itm_idx
+    # Check that lengths of all arguments agree
+    if not (len(sorteds) == len(target_keys) == len(keys)):
+        raise ValueError(
+            'Lengths of arguments do not match: '
+            'sorteds[{}] target_keys[{}] keys[{}]'
+            .format(len(sorteds), len(target_keys), len(keys)))
+    # Construct initial versions of return values
+    itvls = [None] * len(sorteds)
+    idxs = None
+    # Search each sorted array in turn until the set of possible indices
+    # is narrowed to the answer or to the empty set
+    for key_idx, array in enumerate(sorteds):
+        # Search the current array for the current target key
+        key = keys[key_idx]
+        found, itvl = binary_search(
+            array, target_keys[key_idx], key=lambda i, x: key(i, x)[0],
+            target=Target.range)
+        # Update the set of indices
+        indices = (key(i, array[i])[1] for i in range(*itvl))
+        if idxs is None:
+            idxs = set(indices)
+        else:
+            idxs.intersection_update(indices)
+        # Update the intervals
+        itvls[key_idx] = itvl
+        # Break if it is not possible for the target to be found
+        if not found or len(idxs) == 0:
+            break
+    # Return
+    return len(idxs) > 0, idxs, itvls
+
+
+def intersect(sorted1, sorted2):
+    intersection = []
+    items1 = iter(sorted1)
+    items2 = iter(sorted2)
+    # Use a sentinel value that cannot possibly be in either of the
+    # sorted collections
+    sentinel = StopIteration()
+    item1 = next(items1, sentinel)
+    item2 = next(items2, sentinel)
+    while item1 is not sentinel and item2 is not sentinel:
+        if item1 < item2:
+            item1 = next(items1, sentinel)
+        elif item1 > item2:
+            item2 = next(items2, sentinel)
+        else:
+            # Preserves multiplicity of values
+            intersection.append(item1)
+            item1 = next(items1, sentinel)
+            item2 = next(items2, sentinel)
+    return intersection
+
+
+def mk_bat(items, key=None):
+    return sorted(((x, i) for (i, x) in enumerate(items)), key=key)

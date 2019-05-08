@@ -150,11 +150,12 @@ class EventSequenceTest(unittest.TestCase):
             if ts:
                 first = ts[0]
                 first_idx = evs_in_order.index(first)
-                expected = (True, (first_idx, first[1]))
+                expected = (True, first_idx, first[1])
             else:
-                expected = (False, None)
+                expected = (False, None, None)
             self.assertEqual(expected, self.es.first(t), t)
-            self.assertEqual((False, None), self.empty.first(t), t)
+            self.assertEqual(
+                (False, None, None), self.empty.first(t), t)
 
     def test_first_after(self):
         evs_by_when = [(e.when, e) for e in self.evs]
@@ -169,15 +170,15 @@ class EventSequenceTest(unittest.TestCase):
                     if ts_after:
                         first = ts_after[0]
                         first_idx = evs_in_order.index(first)
-                        expected = (True, (first_idx, first[1]))
+                        expected = (True, first_idx, first[1])
                     else:
-                        expected = (False, None)
+                        expected = (False, None, None)
                     self.assertEqual(
                         expected,
                         self.es.first(t, after=w, strict=strict),
                         (t, w, strict))
                     self.assertEqual(
-                        (False, None),
+                        (False, None, None),
                         self.empty.first(t, after=w, strict=strict),
                         (t, w, strict))
 
@@ -245,7 +246,7 @@ class EventSequenceTest(unittest.TestCase):
             self.assertEqual(
                 exists, self.es.before(*seq, strict=False), seq)
 
-    def test_events_between(self):
+    def test_events_within(self):
         ordered_evs = sorted(((e.when, e) for e in self.evs),
                              key=lambda x: (x[0], x[1].type))
         los_his = (
@@ -269,12 +270,12 @@ class EventSequenceTest(unittest.TestCase):
             (None, None),
         )
         for lo, hi in los_his:
-            expected = list(
-                x[1] for x in ordered_evs
+            expected = set(
+                i for i, x in enumerate(ordered_evs)
                 if (lo is None or lo <= x[0]) and
                    (hi is None or x[0] <= hi))
-            self.assertEqual(expected, self.es.events_between(lo, hi))
-            self.assertEqual([], self.empty.events_between(lo, hi))
+            self.assertEqual(expected, self.es.events_within(lo, hi))
+            self.assertEqual(set(), self.empty.events_within(lo, hi))
 
     def test_transitions_empty(self):
         self.assertEqual((), tuple(self.empty.transitions()))
