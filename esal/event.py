@@ -464,7 +464,7 @@ class EventSequence:
         if self._his is not None:
             _, idxs_hi, _ = EventSequence._find_whens(
                 self._his, when_lo, when_hi, lo_open, hi_open)
-            idxs.union_update(idxs_hi)
+            idxs.update(idxs_hi)
         if types is not None and len(idxs) > 0:
             idxs.intersection_update(self.event_indices(*types))
         return idxs
