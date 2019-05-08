@@ -316,19 +316,41 @@ class EventSequence:
                 return True
         return False
 
-    def span(self):
+    def span(self, finite=False):
         """
         Return the extrema of this event sequence, the minimum and maximum
         whens, as an interval.
+
+        finite:
+            Whether to exclude infinities.
         """
-        if len(self._events) > 0:
-            if self._his is None:
-                return interval.Interval(self._los[0], self._los[-1])
-            else:
-                return interval.Interval(self._los[0], self._his[-1])
-        else:
+        if len(self._events) == 0:
             # Return an empty interval for an empty event sequence
             return interval.Interval(0, lo_open=True)
+        # Minimum
+        bat = self._los
+        lo = bat[0][0]
+        # Search for the finite minimum if needed
+        inf = float('-inf')
+        if finite and lo == inf:
+            _, idx = sose.binary_search(
+                bat, inf, key=lambda i, x: x[0], target=sose.Target.hi)
+            lo = bat[idx][0] if idx < len(bat) else bat[-1][0]
+        # Maximum
+        if self._his is not None:
+            bat = self._his
+        hi = bat[-1][0]
+        # Search for the finite maximum if needed
+        inf = float('inf')
+        if finite and hi == inf:
+            found, idx = sose.binary_search(
+                bat, inf, key=lambda i, x: x[0], target=sose.Target.lo)
+            # Make lo index exclusive if found
+            if found:
+                idx -= 1
+            hi = bat[idx][0] if idx >= 0 else bat[0][0]
+        # Return (lo, hi)
+        return interval.Interval(lo, hi)
 
     # Helpers
 
