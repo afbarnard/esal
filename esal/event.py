@@ -481,12 +481,17 @@ class EventSequence:
             Types of events to include.  When not specified, include
             events of all types.
         """
+        # Find lows before the upper bound
+        bat = self._los
         _, idxs, _ = EventSequence._find_whens(
-            self._los, when_lo, when_hi, lo_open, hi_open)
+            bat, when_hi=when_hi, hi_open=hi_open)
+        # Find highs after the lower bound
         if self._his is not None:
-            _, idxs_hi, _ = EventSequence._find_whens(
-                self._his, when_lo, when_hi, lo_open, hi_open)
-            idxs.update(idxs_hi)
+            bat = self._his
+        _, idxs_hi, _ = EventSequence._find_whens(
+            bat, when_lo=when_lo, lo_open=lo_open)
+        # The overlaps are the intersection
+        idxs.intersection_update(idxs_hi)
         if types is not None and len(idxs) > 0:
             idxs.intersection_update(self.event_indices(*types))
         return idxs
